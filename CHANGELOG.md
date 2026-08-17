@@ -23,3 +23,9 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
   (`providers/registry.py`), `POST /v1/caption` (`only_if_empty`, BYOK-Override) und
   `POST /v1/ai_upscale` (`restore_faces` als separat abgerechneter CodeFormer-Zusatzschritt,
   Fallback auf einfaches Resize bei Provider-Ausfall).
+- Phase 6: sichtbares Wasserzeichen (Pillow-Bildkomposition, Logo oder Text), unsichtbares
+  Wasserzeichen (DWT-DCT-SVD über `invisible-watermark`, eigenes Payload-Format mit
+  Marker + 4-Byte-Referenz-ID) und Erkennung als drei getrennte Operationen
+  (`watermark_visible`/`watermark_invisible`/`watermark_detect`). Robustheitsangaben
+  (JPEG-Kompression, Resize, Mindestgröße 256×256) beruhen auf eigenen Messungen, nicht
+  nur auf Herstellerangaben — siehe `docs/api-reference.md`.

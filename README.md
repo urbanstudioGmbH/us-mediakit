@@ -2,9 +2,11 @@
 
 Python-Library, CLI und optionaler Netzwerkdienst für Bild-Metadaten (EXIF/IPTC/XMP), Content Credentials (C2PA) und KI-gestützte Bildverarbeitung — Resize/Crop, Wasserzeichen, KI-Upscaling und KI-Bildbeschreibung, mit durchgängiger Provenienz-Weiterreichung bei jeder erzeugten Bildvariante.
 
-**Status:** in aktiver Entwicklung. Phasen 1–5 (Zuschnitt, Metadaten, C2PA Content
-Credentials, Netzwerk-Dienst mit Konten/Metering, KI-Provider) sind umgesetzt.
-Wasserzeichen folgt in Phase 6 — siehe Roadmap unten.
+**Status:** alle sechs geplanten Phasen umgesetzt (Zuschnitt, Metadaten, C2PA Content
+Credentials, Netzwerk-Dienst mit Konten/Metering, KI-Provider, Wasserzeichen). Offene
+Punkte vor Produktivbetrieb (Steuerberater-Bestätigung der Aufbewahrungsfristen,
+C2PA-Conformance-Zertifikat, Modell-Gewichte final kalibrieren, ...) stehen im internen
+Programmierplan, nicht hier.
 
 ## Ziele
 
@@ -14,7 +16,7 @@ Wasserzeichen folgt in Phase 6 — siehe Roadmap unten.
 - [x] Nutzbar als Library, CLI-Tool und systemd-Dienst mit JSON-API
 - [x] KI-Upscaling/Bildverbesserung über austauschbare Provider (u. a. selbst gehostete Modelle)
 - [x] KI-generierte Bildbeschreibungen/Alt-Texte über eine generische, OpenAI-kompatible Schnittstelle
-- [ ] Sichtbares und unsichtbares Wasserzeichen sowie Erkennung unsichtbarer Wasserzeichen
+- [x] Sichtbares und unsichtbares Wasserzeichen sowie Erkennung unsichtbarer Wasserzeichen
 
 ## Quickstart
 
@@ -33,6 +35,8 @@ Systemabhängigkeiten (macOS via Homebrew, Debian via `apt`): `ffmpeg`, `poppler
 us-mediakit thumbnail photo.jpg --mode showcase_medium -o thumb.jpg
 us-mediakit meta read photo.jpg
 us-mediakit c2pa verify photo.jpg
+us-mediakit watermark invisible photo.jpg
+us-mediakit watermark detect photo.jpg
 ```
 
 Verfügbare Presets stehen in [`src/us_mediakit/config/imageformats.json`](src/us_mediakit/config/imageformats.json),

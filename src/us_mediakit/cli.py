@@ -248,6 +248,73 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_watermark_visible(args: argparse.Namespace) -> int:
+    from us_mediakit.watermark.visible import VisibleWatermarkError, apply_logo, apply_text
+
+    data = Path(args.source).read_bytes()
+    try:
+        if args.logo:
+            result = apply_logo(
+                data, Path(args.logo).read_bytes(), position=args.position, opacity=args.opacity
+            )
+        elif args.text:
+            result = apply_text(data, args.text, position=args.position, opacity=args.opacity)
+        else:
+            print("Entweder --logo oder --text angeben.", file=sys.stderr)
+            return 1
+    except VisibleWatermarkError as exc:
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+
+    Path(args.source).write_bytes(result)
+    print(f"Geschrieben: {args.source}")
+    return 0
+
+
+def _cmd_watermark_invisible(args: argparse.Namespace) -> int:
+    import secrets
+
+    from us_mediakit.watermark.invisible import REFERENCE_ID_LENGTH_BYTES, WatermarkError, embed
+
+    data = Path(args.source).read_bytes()
+    reference_id = bytes.fromhex(args.reference_id) if args.reference_id else secrets.token_bytes(
+        REFERENCE_ID_LENGTH_BYTES
+    )
+
+    try:
+        result = embed(data, reference_id)
+    except WatermarkError as exc:
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+
+    Path(args.source).write_bytes(result)
+    print(f"Geschrieben: {args.source}")
+    print(f"reference_id: {reference_id.hex()}")
+    return 0
+
+
+def _cmd_watermark_detect(args: argparse.Namespace) -> int:
+    from us_mediakit.watermark.detect import detect
+
+    data = Path(args.source).read_bytes()
+    result = detect(data)
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "detected": result.detected,
+                    "reference_id": result.reference_id.hex() if result.reference_id else None,
+                }
+            )
+        )
+    elif result.detected and result.reference_id is not None:
+        print(f"erkannt: reference_id={result.reference_id.hex()}")
+    else:
+        print("nicht erkannt")
+    return 0 if result.detected else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="us-mediakit")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -334,6 +401,29 @@ def build_parser() -> argparse.ArgumentParser:
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.set_defaults(func=_cmd_serve)
+
+    watermark_parser = subparsers.add_parser("watermark", help="Wasserzeichen anbringen/erkennen")
+    watermark_sub = watermark_parser.add_subparsers(dest="watermark_command", required=True)
+
+    watermark_visible = watermark_sub.add_parser("visible", help="Sichtbares Wasserzeichen (Logo/Text)")
+    watermark_visible.add_argument("source")
+    watermark_visible.add_argument("--logo", help="Pfad zu einem Logo-Bild")
+    watermark_visible.add_argument("--text", help="Alternativ ein Schriftzug")
+    watermark_visible.add_argument("--position", default="bottom-right")
+    watermark_visible.add_argument("--opacity", type=float, default=0.6)
+    watermark_visible.set_defaults(func=_cmd_watermark_visible)
+
+    watermark_invisible = watermark_sub.add_parser("invisible", help="Unsichtbares Wasserzeichen (Embedding)")
+    watermark_invisible.add_argument("source")
+    watermark_invisible.add_argument(
+        "--reference-id", dest="reference_id", help="4 Byte hex; ohne Angabe wird eine erzeugt"
+    )
+    watermark_invisible.set_defaults(func=_cmd_watermark_invisible)
+
+    watermark_detect = watermark_sub.add_parser("detect", help="Unsichtbares Wasserzeichen erkennen")
+    watermark_detect.add_argument("source")
+    watermark_detect.add_argument("--json", action="store_true")
+    watermark_detect.set_defaults(func=_cmd_watermark_detect)
 
     return parser
 

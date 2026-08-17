@@ -1,10 +1,8 @@
 # API-Referenz
 
-Diese Datei wächst mit jeder Phase (siehe Programmierplan Abschnitt 10). Aktuell
+Diese Datei wächst mit jeder Phase (siehe Programmierplan Abschnitt 10). Vollständig
 dokumentiert: Zuschnitt (Phase 1), Metadaten (Phase 2), C2PA (Phase 3), Netzwerk-Dienst/
-Konten/Metering (Phase 4), KI-Provider (Phase 5). Wasserzeichen folgt in Phase 6 — die
-Routen `/v1/watermark`, `/v1/watermark/detect` existieren bereits (Auth/Routing stehen),
-liefern aber bis dahin `501 Not Implemented`.
+Konten/Metering (Phase 4), KI-Provider (Phase 5), Wasserzeichen (Phase 6).
 
 Alle `/v1/*`- und `/admin/*`-Endpunkte sind über den Netzwerk-Dienst erreichbar
 (`us-mediakit serve`, siehe [`operations.md`](operations.md)). Die darunterliegenden
@@ -189,10 +187,85 @@ Kein Auth. `{"status": "ok"}`, sobald die Anwendung läuft. Prüft keine Abhäng
 Drei unabhängige Ebenen (nginx, Credits/Minute pro Plan-Tier, Video/PDF-Concurrency) —
 siehe [`operations.md`](operations.md#rate-limiting--drei-unabhängige-ebenen).
 
-### Noch nicht implementiert
+## Wasserzeichen
 
-`POST /v1/watermark` und `POST /v1/watermark/detect` (Phase 6) sind bereits geroutet und
-erfordern einen gültigen API-Key, liefern aber `501 Not Implemented`.
+Drei getrennte Operationen — sichtbares Einblenden, unsichtbares Embedding und
+Erkennung sind eigene Bausteine, keine Varianten eines Features (siehe Programmierplan
+Phase 6). `POST /v1/watermark` deckt Einblenden/Embedding ab (`mode` unterscheidet),
+`POST /v1/watermark/detect` die Erkennung.
+
+### Sichtbar
+
+```bash
+curl -X POST http://localhost:8000/v1/watermark -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "wm-1",
+  "source": "<base64>",
+  "mode": "visible",
+  "logo": "<base64>",
+  "position": "bottom-right",
+  "opacity": 0.6
+}'
+```
+
+`logo` (Base64, idealerweise mit Alphakanal) oder alternativ `text` — genau eines von
+beiden ist Pflicht, sonst `422`. `position`: `top-left`/`top-right`/`bottom-left`/
+`bottom-right`/`center`. Reine Pillow-Bildkomposition, keine zusätzliche Abhängigkeit.
+
+Library-Ebene: `us_mediakit.watermark.visible.apply_logo`/`apply_text`.
+
+### Unsichtbar (Embedding)
+
+```bash
+curl -X POST http://localhost:8000/v1/watermark -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "wm-2",
+  "source": "<base64>",
+  "mode": "invisible",
+  "reference_id": "01020304"
+}'
+```
+
+`reference_id` (4 Byte, hex-kodiert) ist optional — ohne Angabe wird eine zufällige
+erzeugt und in der Antwort zurückgegeben. **Die Zuordnung "Referenz-ID → welches
+Asset/Konto" führt der Aufrufer selbst** — us-mediakit legt dafür keine eigene Tabelle
+an (wie bei der Account-Default-Provider-Auflösung in Phase 5).
+
+Bilder müssen größer als 256×256 Pixel sein, sonst `422`. Technik: DWT-DCT-SVD über
+[`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark) — dieselbe,
+mit der Stable Diffusion seine generierten Bilder standardmäßig markiert.
+
+**Eigene Messergebnisse zur Robustheit** (nicht nur Herstellerangabe, siehe
+`us_mediakit/watermark/invisible.py`): Auf echten Fotos übersteht die reine Erkennung
+moderate JPEG-Nachkompression bis Qualität ~80, bitgenaue Referenz-ID-Wiederherstellung
+erst ab Qualität ≥ 90. Aggressive Kompression und jedes nachträgliche Resize zerstören
+das Signal typischerweise — deshalb ist das Wasserzeichen eine eigenständige Operation,
+anzuwenden auf das tatsächlich ausgelieferte Endergebnis, nicht automatisch an
+`thumbnail` gekoppelt. Auf texturarmen/synthetischen Bildern (kein Foto) versagt die
+Einbettung fast vollständig.
+
+**Abhängigkeitshinweis:** Das `[watermark]`-Extra installiert über `invisible-watermark`
+auch PyTorch (mehrere hundert MB) — die Bibliothek importiert ihr GAN-basiertes
+`rivaGan`-Untermodul beim Laden unbedingt mit, selbst wenn hier nur die leichte
+`dwtDctSvd`-Methode genutzt wird.
+
+Library-Ebene: `us_mediakit.watermark.invisible.embed`.
+
+### Erkennung
+
+```bash
+curl -X POST http://localhost:8000/v1/watermark/detect -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "wm-3",
+  "source": "<base64>"
+}'
+```
+
+Liefert `detected` (bool) und, falls erkannt, die eingebettete `reference_id`.
+**`detected: false` ist ein Hinweis, kein Beweis für aktive Entfernung** — starke
+Nachbearbeitung kann das Signal auch ohne Absicht zerstören (siehe oben). Ein
+belastbarer "wurde entfernt"-Nachweis braucht zusätzlich einen Abgleich mit einem
+`usage_events`-Datensatz, der belegt, dass genau dieses Bild ursprünglich markiert wurde
+— dieser Abgleich ist ebenfalls Sache des Aufrufers.
+
+Library-Ebene: `us_mediakit.watermark.detect.detect`.
 
 ## KI-Provider
 

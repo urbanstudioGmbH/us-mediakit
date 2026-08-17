@@ -131,6 +131,35 @@ class AiUpscaleApiResponse(OperationResponseBase):
     ai_upscale_fallback: bool = False
 
 
+class WatermarkApiRequest(OperationRequestBase):
+    source: str
+    mode: str = Field(description='"visible" oder "invisible"')
+    output_format: str = "jpeg"
+    # sichtbar:
+    logo: str | None = Field(default=None, description="Logo, Base64-kodiert")
+    text: str | None = None
+    position: str = "bottom-right"
+    opacity: float = 0.6
+    # unsichtbar:
+    reference_id: str | None = Field(
+        default=None, description="4 Byte hex-kodiert; ohne Angabe wird eine erzeugt"
+    )
+
+
+class WatermarkApiResponse(OperationResponseBase):
+    data: str | None = None
+    reference_id: str | None = None  # hex, nur bei mode="invisible"
+
+
+class WatermarkDetectApiRequest(OperationRequestBase):
+    source: str
+
+
+class WatermarkDetectApiResponse(OperationResponseBase):
+    detected: bool = False
+    reference_id: str | None = None  # hex
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"
 

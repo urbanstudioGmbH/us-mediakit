@@ -2,7 +2,6 @@ import base64
 import io
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from tests.integration._helpers import auth as _auth
@@ -281,10 +280,5 @@ def test_c2pa_sign_with_configured_signer(client, raw_api_key, monkeypatch):
     assert has_manifest(signed, "image/jpeg") is True
 
 
-# --- Phase 6 Stubs (caption/ai_upscale sind seit Phase 5 echt, siehe test_caption.py/test_ai_upscale.py) ---
-
-
-@pytest.mark.parametrize("path", ["/v1/watermark", "/v1/watermark/detect"])
-def test_not_yet_implemented_endpoints_return_501(client, raw_api_key, path):
-    response = client.post(path, headers=_auth(raw_api_key))
-    assert response.status_code == 501
+# Alle Endpunkte sind seit Phase 6 echt implementiert — siehe test_caption.py,
+# test_ai_upscale.py, test_watermark_api.py für die jeweiligen Phase-5/6-Endpunkttests.

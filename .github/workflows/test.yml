@@ -23,3 +23,20 @@ jobs:
         run: pytest --cov=us_mediakit
       - name: Lint
         run: ruff check src tests
+
+  # Eigener Job, nicht Teil der Haupt-Matrix: das [watermark]-Extra installiert über
+  # invisible-watermark auch PyTorch (mehrere hundert MB) und würde jeden Matrix-Lauf
+  # unnötig verlangsamen, siehe docs/providers.md/api-reference.md-Hinweis dazu.
+  pytest-watermark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl ffmpeg poppler-utils
+      - name: Install package with watermark extra
+        run: pip install -e ".[server,dev,watermark]"
+      - name: Run watermark tests
+        run: pytest tests/unit/test_visible_watermark.py tests/integration/test_invisible_watermark.py tests/integration/test_watermark_api.py

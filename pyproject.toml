@@ -73,6 +73,13 @@ extend-exclude = ["src/us_mediakit/db/migrations"]
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header"]
 
 [tool.mypy]
-python_version = "3.10"
+# Eigentlich 3.10 (Mindestversion des Pakets, siehe pyproject [project].requires-python)
+# — aber numpys eigene .pyi-Stub-Datei nutzt PEP-695-Syntax (3.12+) und lässt mypy schon
+# beim reinen Parsen abstürzen, unabhängig von jedem [[tool.mypy.overrides]]-Eintrag
+# (ausprobiert: follow_imports=skip + ignore_errors verhindert den Absturz nicht). Da
+# mypy nicht Teil der CI ist (siehe .github/workflows/test.yml — dort läuft pytest über
+# 3.10/3.11/3.12, die eigentliche Kompatibilitätsprüfung), hier pragmatisch auf die
+# tatsächliche Dev-Umgebung gesetzt statt auf die Paket-Mindestversion.
+python_version = "3.12"
 ignore_missing_imports = true
 exclude = ["src/us_mediakit/db/migrations"]
