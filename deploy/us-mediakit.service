@@ -1,0 +1,41 @@
+[Unit]
+Description=us-mediakit
+Requires=us-mediakit.socket
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/us-mediakit/venv/bin/uvicorn us_mediakit.server:app --fd 3
+WorkingDirectory=/opt/us-mediakit
+
+DynamicUser=yes
+StateDirectory=us-mediakit
+
+# Datenbank: sqlite für Entwicklung/kleine Instanzen, produktiv MariaDB/PostgreSQL.
+Environment=USMEDIAKIT_DB=postgresql+psycopg://user:pass@localhost/us_mediakit
+Environment=USMEDIAKIT_ADMIN_TOKEN_FILE=/var/lib/us-mediakit/admin.token
+
+# C2PA-Signieren optional — ohne diese beiden bleibt die Provenienz-Propagation ein
+# No-Op (siehe docs/c2pa-concepts.md). Zertifikat muss über das C2PA-Conformance-
+# Programm ausgestellt sein, sonst wird korrekt als "untrusted" markiert.
+# Environment=USMEDIAKIT_C2PA_CERT_FILE=/var/lib/us-mediakit/c2pa-cert-chain.pem
+# Environment=USMEDIAKIT_C2PA_KEY_FILE=/var/lib/us-mediakit/c2pa-private-key.pem
+
+Environment=USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS=4
+
+# Hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/www/atomic/var/cache /var/www/atomic/var/media
+MemoryDenyWriteExecute=yes
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=yes
+LockPersonality=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target

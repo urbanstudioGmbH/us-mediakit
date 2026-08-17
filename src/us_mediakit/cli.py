@@ -6,6 +6,7 @@ import argparse
 import io
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from PIL import Image, UnidentifiedImageError
@@ -180,6 +181,73 @@ def _cmd_c2pa_sign(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_admin_api_key_create(args: argparse.Namespace) -> int:
+    from datetime import datetime, timezone
+
+    from us_mediakit.api.deps import generate_api_key
+    from us_mediakit.db.engine import create_db_engine, create_session_factory, init_db
+    from us_mediakit.db.models import ApiKey
+
+    engine = create_db_engine()
+    init_db(engine)
+    session_factory = create_session_factory(engine)
+
+    generated = generate_api_key()
+    with session_factory() as session:
+        session.add(
+            ApiKey(
+                id=generated.key_prefix,
+                account_ref=args.account_ref,
+                key_prefix=generated.key_prefix,
+                key_hash=generated.key_hash,
+                label=args.label,
+                status="active",
+                created_at=datetime.now(timezone.utc),
+            )
+        )
+        session.commit()
+
+    print(f"API-Key erzeugt: {generated.raw_key}")
+    print("Dieser Key wird nirgendwo gespeichert — jetzt sichern, er lässt sich nicht erneut anzeigen.")
+    return 0
+
+
+def _cmd_admin_api_key_suspend(args: argparse.Namespace) -> int:
+    from us_mediakit.db.engine import create_db_engine, create_session_factory
+    from us_mediakit.db.models import ApiKey
+
+    session_factory = create_session_factory(create_db_engine())
+    with session_factory() as session:
+        api_key = session.get(ApiKey, args.key_id)
+        if api_key is None:
+            print(f"API-Key {args.key_id!r} nicht gefunden.", file=sys.stderr)
+            return 1
+        api_key.status = "suspended"
+        session.commit()
+    print(f"Gesperrt: {args.key_id}")
+    return 0
+
+
+def _cmd_admin_usage(args: argparse.Namespace) -> int:
+    from us_mediakit.api.admin.usage import compute_account_usage
+    from us_mediakit.db.engine import create_db_engine, create_session_factory
+
+    session_factory = create_session_factory(create_db_engine())
+    with session_factory() as session:
+        result = compute_account_usage(
+            session, args.account_ref, from_=args.date_from, to=args.date_to
+        )
+    print(json.dumps(result, indent=2, ensure_ascii=False))
+    return 0
+
+
+def _cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    uvicorn.run("us_mediakit.server:app", host=args.host, port=args.port)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="us-mediakit")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -240,6 +308,32 @@ def build_parser() -> argparse.ArgumentParser:
     meta_write.add_argument("--set", action="append", metavar="FIELD=VALUE")
     meta_write.add_argument("--strip-gps", action="store_true")
     meta_write.set_defaults(func=_cmd_meta_write)
+
+    admin = subparsers.add_parser("admin", help="API-Keys/Nutzung verwalten")
+    admin_sub = admin.add_subparsers(dest="admin_command", required=True)
+
+    admin_api_key = admin_sub.add_parser("api-key")
+    admin_api_key_sub = admin_api_key.add_subparsers(dest="api_key_command", required=True)
+
+    admin_api_key_create = admin_api_key_sub.add_parser("create")
+    admin_api_key_create.add_argument("--account-ref", required=True, dest="account_ref")
+    admin_api_key_create.add_argument("--label", required=True)
+    admin_api_key_create.set_defaults(func=_cmd_admin_api_key_create)
+
+    admin_api_key_suspend = admin_api_key_sub.add_parser("suspend")
+    admin_api_key_suspend.add_argument("key_id")
+    admin_api_key_suspend.set_defaults(func=_cmd_admin_api_key_suspend)
+
+    admin_usage = admin_sub.add_parser("usage")
+    admin_usage.add_argument("account_ref")
+    admin_usage.add_argument("--from", dest="date_from", type=datetime.fromisoformat)
+    admin_usage.add_argument("--to", dest="date_to", type=datetime.fromisoformat)
+    admin_usage.set_defaults(func=_cmd_admin_usage)
+
+    serve = subparsers.add_parser("serve", help="Netzwerk-Dienst starten (Entwicklung)")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.set_defaults(func=_cmd_serve)
 
     return parser
 

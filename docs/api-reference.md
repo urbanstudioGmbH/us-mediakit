@@ -1,8 +1,15 @@
 # API-Referenz
 
 Diese Datei wächst mit jeder Phase (siehe Programmierplan Abschnitt 10). Aktuell
-dokumentiert: Zuschnitt (Phase 1) und Metadaten (Phase 2). C2PA, der Netzwerk-Dienst,
-KI-Provider und Wasserzeichen folgen in den jeweiligen Phasen.
+dokumentiert: Zuschnitt (Phase 1), Metadaten (Phase 2), C2PA (Phase 3), Netzwerk-Dienst/
+Konten/Metering (Phase 4). KI-Provider und Wasserzeichen folgen in Phase 5/6 — die
+Routen `/v1/caption`, `/v1/ai_upscale`, `/v1/watermark`, `/v1/watermark/detect` existieren
+bereits (Auth/Routing stehen), liefern aber bis dahin `501 Not Implemented`.
+
+Alle `/v1/*`- und `/admin/*`-Endpunkte sind über den Netzwerk-Dienst erreichbar
+(`us-mediakit serve`, siehe [`operations.md`](operations.md)). Die darunterliegenden
+Library-Funktionen (siehe jeweilige Abschnitte unten) sind unabhängig davon auch ohne
+Server nutzbar (Library/CLI).
 
 ## Zuschnitt (`thumbnail`)
 
@@ -132,3 +139,58 @@ Abschnitt 5a). Abschalten mit `--no-carry-c2pa`.
 Library-Ebene: `ThumbnailRequest.c2pa_signer_config`/`c2pa_digital_source_type`/`c2pa_actions`/
 `c2pa_assertions`/`carry_c2pa`, ausgewertet von `us_mediakit.c2pa.propagate.propagate`, das
 standardmäßig als Provenienz-Hook in `generate_thumbnail` eingehängt ist.
+
+## Netzwerk-Dienst
+
+### Auth
+
+Zwei getrennte Schemata, `Authorization: Bearer <token>` in beiden Fällen:
+
+- **API-Key** (`/v1/*`) — erzeugt über `POST /admin/api-keys`. Ungültig/unbekannt → 401,
+  gesperrt → 403.
+- **Admin-Token** (`/admin/*`) — ein Token pro Instanz, siehe `USMEDIAKIT_ADMIN_TOKEN_FILE`
+  in [`operations.md`](operations.md). Nicht konfiguriert → 503, falsch → 403.
+
+### `dry_run` und `request_id`
+
+Auf jedem `/v1/*`-Endpunkt verfügbar:
+
+- **`dry_run: true`** — liefert `estimated_credits`/`confidence: "exact"`, führt die
+  Operation nicht aus, kein `usage_events`-Eintrag, 0 Credits.
+- **`request_id`** — Idempotenz-Key. Eine Wiederholung mit derselben `request_id`
+  liefert dieselbe bereits berechnete Antwort zurück, ohne die Operation erneut
+  auszuführen oder erneut abzurechnen — solange die Antwort noch im Kurzzeit-Cache liegt
+  (Standard 5 Minuten, pro Worker-Prozess, siehe `operations.md`). Danach liefert eine
+  Wiederholung `409 Conflict`, statt eine möglicherweise andere Antwort vorzutäuschen.
+
+### Admin — API-Keys
+
+| Methode & Pfad | Zweck |
+|---|---|
+| `POST /admin/api-keys` | Erzeugt einen Key (`account_ref`, `label`). Der Klartext-Key ist nur in dieser Antwort sichtbar. |
+| `POST /admin/api-keys/{id}/suspend` | Sperrt einen Key (z. B. Guthaben-Enforcement durch den Kundenbereich). |
+| `POST /admin/api-keys/{id}/reactivate` | Entsperrt einen Key. |
+| `DELETE /admin/api-keys/{id}` | Endgültiger Widerruf — löscht den Key-Datensatz. `usage_events` bleiben unabhängig davon erhalten (`account_ref` ist denormalisiert). |
+
+### Admin — Nutzung
+
+| Methode & Pfad | Zweck |
+|---|---|
+| `GET /admin/accounts/{account_ref}/usage` | Aggregierte Nutzung nach Operation (`count`, `credits`, `bytes_in`, `bytes_out`), optional `?from=`/`?to=` (ISO-8601). Für die Anzeige im Kundenbereich. |
+| `GET /admin/usage/export` | Cursor-basiert (`since_id`, `limit`, Default 500, Max 5000): liefert `UsageEvent`-Zeilen mit `id > since_id`, aufsteigend, plus `next_since_id` für den nächsten Poll. Für den Guthaben-Abzug im Kundenbereich — siehe Abschnitt 9 des Programmierplans zur Abstimmung des Poll-Intervalls. |
+
+### `GET /health`
+
+Kein Auth. `{"status": "ok"}`, sobald die Anwendung läuft. Prüft keine Abhängigkeiten
+(DB, `exiftool`, `ffmpeg`, `pdftoppm`).
+
+### Rate-Limiting
+
+Drei unabhängige Ebenen (nginx, Credits/Minute pro Plan-Tier, Video/PDF-Concurrency) —
+siehe [`operations.md`](operations.md#rate-limiting--drei-unabhängige-ebenen).
+
+### Noch nicht implementiert
+
+`POST /v1/caption` und `POST /v1/ai_upscale` (Phase 5), `POST /v1/watermark` und
+`POST /v1/watermark/detect` (Phase 6) sind bereits geroutet und erfordern einen gültigen
+API-Key, liefern aber `501 Not Implemented`.
