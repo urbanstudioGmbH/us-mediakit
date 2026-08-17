@@ -18,6 +18,24 @@ us-mediakit thumbnail photo.jpg --mode showcase_medium -o thumb.jpg
 
 Library-Ebene: `us_mediakit.core.pipeline.generate_thumbnail(ThumbnailRequest(...))`.
 
+### Ausgabeformat (`output_format`)
+
+`jpg`/`jpeg`, `png`, `webp`, `gif`, `heic`/`heif`, `avif` — unbekannte Werte liefern `422`
+(`UnsupportedOutputFormatError`), keinen stillen Rückfall auf JPEG.
+
+```bash
+us-mediakit thumbnail photo.jpg --mode showcase_medium --output-format avif -o thumb.avif
+```
+
+- **AVIF** ist in aktuellen Pillow-Wheels nativ enthalten, hängt aber davon ab, ob die
+  installierte Wheel mit `libavif` gebaut wurde — nicht auf jeder Plattform garantiert.
+  Nicht verfügbar → `422` statt eines stillen Fallbacks.
+- **HEIC/HEIF** benötigt das `pillow-heif`-Paket (Kern-Abhängigkeit, registriert seinen
+  Encoder beim Import von `us_mediakit`). Für die Zielverwendung relevant:
+  HEVC-Codec-Lizenzierung (MPEG LA) ist eine Angelegenheit des Betreibers, keine, die
+  us-mediakit auflöst — bei Unsicherheit lieber AVIF (lizenzfrei, vergleichbare
+  Kompressionseffizienz) als Zielformat wählen.
+
 ## Metadaten
 
 ### Lesen

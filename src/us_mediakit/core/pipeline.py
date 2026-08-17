@@ -24,7 +24,9 @@ from us_mediakit.metadata.write import copy_metadata_from
 
 DEFAULT_QUALITY = 80
 
-_SAVE_FORMAT = {"jpg": "JPEG", "jpeg": "JPEG", "png": "PNG", "webp": "WEBP", "gif": "GIF"}
+
+class UnsupportedOutputFormatError(ValueError):
+    pass
 
 
 @dataclass
@@ -123,7 +125,20 @@ def generate_thumbnail(
             ai=request.ai,
         )
 
-    save_format = _SAVE_FORMAT.get(request.output_format.lower(), "JPEG")
+    output_format_key = request.output_format.lower()
+    try:
+        save_format = formats.SAVE_FORMAT_BY_TYPE[output_format_key]
+    except KeyError:
+        known = ", ".join(sorted(formats.SAVE_FORMAT_BY_TYPE))
+        raise UnsupportedOutputFormatError(
+            f"Unbekanntes output_format {request.output_format!r}. Bekannt: {known}"
+        ) from None
+    if not formats.is_write_format_available(save_format):
+        raise UnsupportedOutputFormatError(
+            f"{save_format} kann von der installierten Pillow-Version nicht geschrieben "
+            f"werden (bei AVIF abhängig davon, ob die Wheel mit libavif gebaut wurde; "
+            f"bei HEIF/HEIC: pillow-heif fehlt oder ist nicht registriert)."
+        )
     quality = request.mode.get("quality", DEFAULT_QUALITY)
 
     image_to_save = fit_result.image
@@ -131,7 +146,7 @@ def generate_thumbnail(
         image_to_save = image_to_save.convert("RGB")
 
     buffer = io.BytesIO()
-    save_kwargs = {"quality": quality} if save_format in ("JPEG", "WEBP") else {}
+    save_kwargs = {"quality": quality} if save_format in ("JPEG", "WEBP", "HEIF", "AVIF") else {}
     image_to_save.save(buffer, format=save_format, **save_kwargs)
     encoded = buffer.getvalue()
 
@@ -156,7 +171,7 @@ def generate_thumbnail(
 
     return ThumbnailResult(
         data=encoded,
-        content_type=formats.get_content_type(request.output_format) or "application/octet-stream",
+        content_type=formats.get_content_type(output_format_key) or "application/octet-stream",
         target_width=fit_result.target_width,
         target_height=fit_result.target_height,
         source_image_type=source_image_type,

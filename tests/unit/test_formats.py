@@ -45,3 +45,21 @@ def test_unknown_returns_none():
 def test_content_type_lookup():
     assert formats.get_content_type("jpg") == "image/jpeg"
     assert formats.get_content_type("nonexistent") is None
+
+
+def test_is_write_format_available_for_always_supported_formats():
+    assert formats.is_write_format_available("JPEG") is True
+    assert formats.is_write_format_available("PNG") is True
+    assert formats.is_write_format_available("WEBP") is True
+
+
+def test_is_write_format_available_for_unknown_format():
+    assert formats.is_write_format_available("NOT-A-REAL-FORMAT") is False
+
+
+def test_is_write_format_available_heif_after_pillow_heif_registration():
+    """us_mediakit registriert pillow-heif beim Paket-Import (siehe __init__.py) —
+    ohne das wäre "HEIF" hier nicht in Image.SAVE enthalten."""
+    import us_mediakit  # noqa: F401 — Import löst die Registrierung aus
+
+    assert formats.is_write_format_available("HEIF") is True

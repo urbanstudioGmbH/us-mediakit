@@ -1,8 +1,13 @@
 import io
 
+import pytest
 from PIL import Image
 
-from us_mediakit.core.pipeline import ThumbnailRequest, generate_thumbnail
+from us_mediakit.core.pipeline import (
+    ThumbnailRequest,
+    UnsupportedOutputFormatError,
+    generate_thumbnail,
+)
 
 
 def _jpeg_bytes(w: int, h: int) -> bytes:
@@ -48,6 +53,45 @@ def test_generate_thumbnail_svg_passthrough_sanitized():
 
     assert result.content_type == "image/svg+xml"
     assert b"script" not in result.data
+
+
+def test_generate_thumbnail_avif_output_roundtrips():
+    request = ThumbnailRequest(
+        source=_jpeg_bytes(200, 200),
+        mode={"w": 50, "h": 50, "fit": "full"},
+        output_format="avif",
+        carry_metadata=False,
+    )
+    result = generate_thumbnail(request)
+
+    assert result.content_type == "image/avif"
+    with Image.open(io.BytesIO(result.data)) as decoded:
+        assert decoded.format == "AVIF"
+        assert decoded.size == (50, 50)
+
+
+def test_generate_thumbnail_heic_output_roundtrips():
+    request = ThumbnailRequest(
+        source=_jpeg_bytes(200, 200),
+        mode={"w": 50, "h": 50, "fit": "full"},
+        output_format="heic",
+        carry_metadata=False,
+    )
+    result = generate_thumbnail(request)
+
+    assert result.content_type == "image/heic"
+    with Image.open(io.BytesIO(result.data)) as decoded:
+        assert decoded.size == (50, 50)
+
+
+def test_generate_thumbnail_unknown_output_format_raises_clear_error():
+    request = ThumbnailRequest(
+        source=_jpeg_bytes(100, 100),
+        mode={"w": 20, "h": 20, "fit": "full"},
+        output_format="bogus",
+    )
+    with pytest.raises(UnsupportedOutputFormatError, match="bogus"):
+        generate_thumbnail(request)
 
 
 def test_provenance_hook_is_invoked():

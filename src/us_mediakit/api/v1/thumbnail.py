@@ -71,16 +71,22 @@ def post_thumbnail(
         }
 
     def metered_work() -> tuple[bytes, dict]:
-        if not (body.is_video or body.is_pdf):
-            return work()
         try:
-            with _video_pdf_limiter:
+            if not (body.is_video or body.is_pdf):
                 return work()
-        except ConcurrencyLimitExceeded:
-            raise HTTPException(
-                status_code=429,
-                detail="Zu viele gleichzeitige Video-/PDF-Jobs, bitte später erneut versuchen.",
-            ) from None
+            try:
+                with _video_pdf_limiter:
+                    return work()
+            except ConcurrencyLimitExceeded:
+                raise HTTPException(
+                    status_code=429,
+                    detail="Zu viele gleichzeitige Video-/PDF-Jobs, bitte später erneut versuchen.",
+                ) from None
+        except ValueError as exc:
+            # Deckt u. a. UnsupportedOutputFormatError, SecurityLimitExceeded,
+            # SvgSanitizeError und einen unbekannten Fit-Modus ab — alles
+            # Eingabefehler des Aufrufers, kein Serverfehler.
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     result = run_metered(
         ctx,

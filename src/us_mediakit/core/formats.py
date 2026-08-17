@@ -6,6 +6,8 @@ Portierung der Signaturtabelle aus SimpleImageLibrary3::getImageTypeFromString
 
 from __future__ import annotations
 
+from PIL import Image, features
+
 CONTENT_TYPES: dict[str, str] = {
     "png": "image/png",
     "jpg": "image/jpeg",
@@ -16,6 +18,7 @@ CONTENT_TYPES: dict[str, str] = {
     "avif": "image/avif",
     "webp": "image/webp",
     "heic": "image/heic",
+    "heif": "image/heif",
 }
 
 # Einfache Präfix-Signaturen (Byte-Folge am Dateianfang), Reihenfolge wie im
@@ -103,3 +106,26 @@ EXTENSION_BY_TYPE: dict[str, str] = {
 
 def get_extension(image_type: str | None) -> str:
     return EXTENSION_BY_TYPE.get(image_type or "", ".bin")
+
+
+# Pillow-Save-Formatname pro output_format-String, wie er über CLI/API angefragt wird.
+SAVE_FORMAT_BY_TYPE: dict[str, str] = {
+    "jpg": "JPEG",
+    "jpeg": "JPEG",
+    "png": "PNG",
+    "webp": "WEBP",
+    "gif": "GIF",
+    "heic": "HEIF",
+    "heif": "HEIF",
+    "avif": "AVIF",
+}
+
+
+def is_write_format_available(save_format: str) -> bool:
+    """Prüft, ob Pillow (inkl. registrierter Plugins wie pillow-heif) das jeweilige
+    Format tatsächlich schreiben kann. AVIF hängt davon ab, ob die installierte
+    Pillow-Wheel mit libavif gebaut wurde — nicht bei jedem Build/jeder Plattform
+    garantiert, deshalb hier zur Laufzeit geprüft statt vorausgesetzt."""
+    if save_format == "AVIF":
+        return bool(features.check("avif"))
+    return save_format in Image.SAVE

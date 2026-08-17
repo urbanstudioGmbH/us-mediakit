@@ -78,6 +78,20 @@ def test_thumbnail_unknown_mode_returns_422(client, raw_api_key):
     assert response.status_code == 422
 
 
+def test_thumbnail_unknown_output_format_returns_422(client, raw_api_key):
+    response = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-thumb-bogus-format",
+            "source": _jpeg_b64(),
+            "mode": "showcase_medium",
+            "output_format": "bogus-format",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert response.status_code == 422
+
+
 def test_thumbnail_dry_run_costs_nothing_and_does_not_process(client, raw_api_key):
     response = client.post(
         "/v1/thumbnail",
