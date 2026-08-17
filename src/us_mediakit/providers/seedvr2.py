@@ -1,6 +1,6 @@
 """SeedVR2 als eigener Provider-Prozess. Braucht in jeder Variante eine dedizierte GPU
-(siehe Ressourcentabelle in Phase 5 des Programmierplans) — Einsatzempfehlung: stark
-degradiertes Ausgangsmaterial, nicht der Standardfall."""
+(siehe Ressourcentabelle in docs/providers.md) — Einsatzempfehlung: stark degradiertes
+Ausgangsmaterial, nicht der Standardfall."""
 
 from __future__ import annotations
 

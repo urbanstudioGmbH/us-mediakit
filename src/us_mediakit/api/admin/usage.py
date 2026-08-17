@@ -1,6 +1,6 @@
 """Aggregierte Nutzung (für die Anzeige im Kundenbereich) und cursor-basierter Export
-(für den Guthaben-Abzug im Kundenbereich — Poll-Intervall dort abzustimmen, siehe
-Programmierplan Abschnitt 9)."""
+(für den Guthaben-Abzug im Kundenbereich — Poll-Intervall mit dem Kundenbereich
+abstimmen, Empfehlung 1–2 Minuten)."""
 
 from __future__ import annotations
 

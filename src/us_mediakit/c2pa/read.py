@@ -22,7 +22,7 @@ def read_manifest(data: bytes, mime_type: str) -> dict[str, Any] | None:
 def has_manifest(data: bytes, mime_type: str) -> bool:
     """Günstiger Vorab-Check, ob überhaupt ein C2PA-Manifest vorhanden ist.
 
-    Wird von der Provenienz-Prüfung aus Abschnitt 5a des Programmierplans genutzt, bevor
+    Wird von der Provenienz-Propagation (`us_mediakit.c2pa.propagate`) genutzt, bevor
     ein neues Manifest für ein Derivat erzeugt wird.
     """
     return read_manifest(data, mime_type) is not None

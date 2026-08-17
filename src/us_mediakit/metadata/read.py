@@ -1,4 +1,4 @@
-"""EXIF/IPTC/XMP lesen. C2PA-Daten kommen in Phase 3 hinzu (siehe `us_mediakit.c2pa`)."""
+"""EXIF/IPTC/XMP lesen. C2PA-Daten liegen in einem eigenen Modul (siehe `us_mediakit.c2pa`)."""
 
 from __future__ import annotations
 

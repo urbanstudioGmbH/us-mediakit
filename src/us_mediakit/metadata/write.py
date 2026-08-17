@@ -1,7 +1,7 @@
 """EXIF/IPTC/XMP schreiben und von einer Quelle auf ein Derivat übertragen.
 
-`copy_metadata_from` ist der Baustein, den `core.pipeline` ab Phase 2 fest verdrahtet:
-jede erzeugte Bildvariante bekommt die Metadaten des Originals per exiftools
+`copy_metadata_from` ist der Baustein, den `core.pipeline` fest verdrahtet: jede
+erzeugte Bildvariante bekommt die Metadaten des Originals per exiftools
 `-tagsFromFile` zurückgeschrieben, bevor sie ausgeliefert wird.
 """
 

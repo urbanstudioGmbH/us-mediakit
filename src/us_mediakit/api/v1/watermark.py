@@ -1,12 +1,12 @@
-"""Sichtbares/unsichtbares Wasserzeichen + Erkennung — drei getrennte Operationen
-(siehe Programmierplan Phase 6), nicht Varianten eines Features.
+"""Sichtbares/unsichtbares Wasserzeichen + Erkennung — drei getrennte Operationen,
+nicht Varianten eines Features.
 
 **Referenz-ID-Verwaltung, bewusst einfach gehalten:** Für das unsichtbare Wasserzeichen
 gibt entweder der Aufrufer eine `reference_id` mit, oder der Dienst erzeugt eine
 zufällige. In beiden Fällen liegt die Zuordnung "Referenz-ID → welches Asset/Konto"
 **beim Aufrufer** — us-mediakit legt dafür keine eigene Tabelle an (analog zur
-Account-Default-Provider-Auflösung in Phase 5: das gehört zum aufrufenden System, nicht
-in dieses Datenmodell). `POST /v1/watermark/detect` liefert die gefundene Referenz-ID
+Account-Default-Provider-Auflösung: das gehört zum aufrufenden System, nicht in dieses
+Datenmodell). `POST /v1/watermark/detect` liefert die gefundene Referenz-ID
 zurück, der Abgleich "stammt das von Konto X" ist Sache des Aufrufers.
 """
 

@@ -3,8 +3,7 @@
 Es gibt für "Bild-Upscaling/-Verbesserung als HTTP-Dienst" keinen etablierten
 Branchenstandard (anders als z. B. bei OpenAI-kompatiblen Chat-APIs) — der folgende
 Vertrag ist deshalb projekteigen. Real-ESRGAN/CodeFormer/SeedVR2 laufen als eigene
-Provider-Prozesse (siehe Programmierplan Abschnitt 6) und müssen genau diesen Vertrag
-bedienen:
+Provider-Prozesse und müssen genau diesen Vertrag bedienen:
 
 ```
 POST {endpoint}/enhance

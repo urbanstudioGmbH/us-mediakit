@@ -1,8 +1,8 @@
 """Laden der mitgelieferten Default-Konfiguration (Presets, Credits-Gewichte).
 
 Selbst-Hoster ersetzen diese Dateien für den Produktivbetrieb typischerweise durch eigene
-(siehe Programmierplan Abschnitt 3) — die hier ausgelieferten Werte sind Vorgaben, keine
-für den produktiven Einsatz von urbanstudio kalibrierten Endwerte.
+— die hier ausgelieferten Werte sind Vorgaben, keine für den produktiven Einsatz von
+urbanstudio kalibrierten Endwerte.
 """
 
 from __future__ import annotations

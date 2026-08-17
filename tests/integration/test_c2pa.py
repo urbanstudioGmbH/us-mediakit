@@ -82,8 +82,8 @@ def test_verify_signed_manifest_is_cryptographically_valid(signer_config):
     Achsen. Ein "untrusted"-Eintrag in `failure` kann daher neben `validation_state ==
     "Valid"` stehen: die Signatur selbst stimmt, dem Aussteller wird trotzdem nicht
     vertraut. Für Produktivbetrieb braucht es in jedem Fall ein über das
-    C2PA-Conformance-Programm ausgestelltes Zertifikat, siehe Abschnitt 9 des
-    Programmierplans — "Valid" allein ist kein Vertrauensbeweis."""
+    C2PA-Conformance-Programm ausgestelltes Zertifikat (siehe docs/c2pa-conformance.md)
+    — "Valid" allein ist kein Vertrauensbeweis."""
     signed = sign(
         SignRequest(
             data=_jpeg_bytes(),
@@ -108,7 +108,7 @@ def test_verify_without_manifest_reports_has_manifest_false():
 
 
 def test_sign_never_mutates_an_existing_manifest_new_derivative_gets_own_manifest(signer_config):
-    """Zentrales Prinzip aus Phase 3: eine Ableitung bekommt ein NEUES Manifest mit
+    """Zentrales Prinzip: eine Ableitung bekommt ein NEUES Manifest mit
     Ingredient-Verweis, statt ein bestehendes zu verändern."""
     original_signed = sign(
         SignRequest(
@@ -140,7 +140,7 @@ def test_sign_never_mutates_an_existing_manifest_new_derivative_gets_own_manifes
     assert original_manifest["label"] != derivative_manifest["label"]
 
 
-# --- Abschnitt 5a: Propagations-Entscheidung ---
+# --- Propagations-Entscheidung ---
 
 
 def _dummy_request(**overrides) -> ThumbnailRequest:

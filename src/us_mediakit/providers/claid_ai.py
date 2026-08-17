@@ -2,16 +2,13 @@
 
 Request-/Response-Form 1:1 aus der bisherigen PHP-Integration
 (`SimpleImageLibrary3::AIUpscaleImagick`) übernommen, damit sich am tatsächlichen
-claid.ai-Verhalten nichts ändert. Wird laut Programmierplan langfristig durch selbst
-gehostete Modelle ersetzt, bleibt bis dahin aber ein gleichwertig austauschbarer
-Provider — kein Sonderfall im restlichen Code.
+claid.ai-Verhalten nichts ändert. Als reiner externer Dienst wird claid.ai wie jeder
+andere `ImageEnhanceProvider` behandelt — kein Sonderfall im restlichen Code.
 
 **Nicht verifiziert:** ob und in welchem Feld claid.ai die tatsächlichen Kosten einer
 Anfrage in der Antwort zurückmeldet. Die PHP-Quelle hat das nie ausgelesen, deshalb
 bleibt `external_cost_micros` hier `None` — vor Produktivbetrieb gegen die aktuelle
-claid.ai-API-Dokumentation prüfen, statt ein plausibel klingendes Feld zu erfinden
-(siehe Programmierplan Abschnitt 4, `external_cost_micros` "nur bei ai_upscale
-(claid-ai) gefüllt").
+claid.ai-API-Dokumentation prüfen, statt ein plausibel klingendes Feld zu erfinden.
 """
 
 from __future__ import annotations

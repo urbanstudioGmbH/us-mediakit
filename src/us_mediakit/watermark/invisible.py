@@ -1,27 +1,25 @@
 """Unsichtbares Wasserzeichen (Embedding) via DWT-DCT-SVD (`invisible-watermark`).
 
-**Payload-Format, eigens entworfen, nicht durch die Bibliothek vorgegeben:** 8 Byte
-gesamt — 4 Byte fester Marker `b"USMK"` + 4 Byte opake Referenz-ID. Der Marker ist nötig,
-weil `WatermarkDecoder.decode()` bei *jedem* Bild — auch einem, das nie markiert wurde —
-irgendeine Bitfolge zurückgibt; ohne Marker ließe sich "kein Signal vorhanden" nicht von
-"zufällig plausibel aussehendes Rauschen" unterscheiden (siehe `detect.py`). Eigens
-getestet: ein niemals markiertes Bild erzeugt beim Decode keinen Marker-Treffer (siehe
-Testsuite) — die False-Positive-Rate ist durch die Markergröße (32 Bit) astronomisch klein.
+**Payload-Format:** 8 Byte gesamt — 4 Byte fester Marker `b"USMK"` + 4 Byte opake
+Referenz-ID. Der Marker ist nötig, weil `WatermarkDecoder.decode()` bei *jedem* Bild —
+auch einem, das nie markiert wurde — irgendeine Bitfolge zurückgibt; ohne Marker ließe
+sich "kein Signal vorhanden" nicht von zufällig plausibel aussehendem Rauschen
+unterscheiden (siehe `detect.py`). Die False-Positive-Rate ist durch die Markergröße
+(32 Bit) astronomisch klein.
 
-**Eigene Messergebnisse, keine reine Herstellerangabe:** Auf echten Fotos übersteht der
-Marker-Treffer (also "erkannt: ja/nein") moderate JPEG-Nachkompression bis herab zu
-Qualität ~80, aber die Referenz-ID-Bits sind erst ab Qualität ≥ 90 zuverlässig bitgenau
-wiederherstellbar — näher an der reinen Erkennungsschwelle (eigener Test bei Qualität 85)
-können bereits einzelne Bits der Referenz-ID kippen, während der Marker selbst noch
-matcht. Aggressive Kompression (Qualität 50 im eigenen Test) zerstört auch den Marker,
-ebenso ein nachträgliches Resize — das Signal muss nach jeder größenverändernden
-Operation neu eingebettet werden. Auf texturarmen synthetischen Bildern (eigener Test
-sowohl mit Zufallsrauschen als auch mit einer schlicht einfarbigen Testfläche) versagt
-die Einbettung fast vollständig — die Methode braucht die Frequenzstruktur echter
-Fotoinhalte, um überhaupt Spielraum zum Einbetten zu haben. Deshalb ist das unsichtbare
-Wasserzeichen bewusst eine **eigenständige** Operation,
-nicht automatisch an `thumbnail` gekoppelt: es muss auf dem tatsächlich ausgelieferten
-Endergebnis liegen, nicht auf einer Zwischengröße, die später noch skaliert wird.
+**Robustheit:** Auf echten Fotos übersteht der Marker-Treffer (also "erkannt: ja/nein")
+moderate JPEG-Nachkompression bis herab zu Qualität ~80, aber die Referenz-ID-Bits sind
+erst ab Qualität ≥ 90 zuverlässig bitgenau wiederherstellbar — näher an der reinen
+Erkennungsschwelle (Qualität ~85) können bereits einzelne Bits der Referenz-ID kippen,
+während der Marker selbst noch matcht. Aggressive Kompression (Qualität 50) zerstört
+auch den Marker, ebenso ein nachträgliches Resize — das Signal muss nach jeder
+größenverändernden Operation neu eingebettet werden. Auf texturarmen synthetischen
+Bildern (Zufallsrauschen, aber auch schlicht einfarbige Flächen) versagt die Einbettung
+fast vollständig — die Methode braucht die Frequenzstruktur echter Fotoinhalte, um
+überhaupt Spielraum zum Einbetten zu haben. Deshalb ist das unsichtbare Wasserzeichen
+eine **eigenständige** Operation, nicht automatisch an `thumbnail` gekoppelt: es muss
+auf dem tatsächlich ausgelieferten Endergebnis liegen, nicht auf einer Zwischengröße,
+die später noch skaliert wird.
 
 **Mindestgröße:** Bilder müssen größer als 256×256 Pixel sein — die Bibliothek lehnt
 kleinere Bilder mit einer generischen `RuntimeError` ab, hier in `WatermarkError`
@@ -31,8 +29,8 @@ kleinere Bilder mit einer generischen `RuntimeError` ab, hier in `WatermarkError
 `rivaGan`-Untermodul, das `torch` voraussetzt — das `[watermark]`-Extra installiert damit
 auch PyTorch (mehrere hundert MB), selbst wenn hier ausschließlich die leichte
 `dwtDctSvd`-Methode genutzt wird. Der Import wirft dabei eine harmlose, aber
-irreführende NumPy-ABI-Warnung (siehe `_suppress_import_warnings`) — die eigene
-Testsuite bestätigt, dass die Funktion davon unberührt korrekt arbeitet.
+irreführende NumPy-ABI-Warnung (siehe `_suppress_import_warnings`), die die Funktion
+nicht beeinträchtigt.
 """
 
 from __future__ import annotations

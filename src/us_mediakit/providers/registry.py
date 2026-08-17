@@ -1,13 +1,7 @@
 """Baut konkrete Provider-Instanzen aus einer YAML-Konfigurationsdatei.
 
-**Vorläufige Entscheidung, kein endgültig festgelegtes Format:** Der Programmierplan
-listet "Provider-Konfigurationsformat (ENV vs. YAML-Datei) final festlegen" explizit als
-offenen Punkt vor Umsetzungsstart (Abschnitt 9) und zeigt in Abschnitt 3 nur eine
-YAML-Beispielskizze, keine verbindliche Spezifikation. Dieses Modul setzt genau jene
-Skizze um, damit Phase 5 überhaupt lauffähig ist — die endgültige Festlegung (die auch
-auf ENV-Variablen statt YAML fallen könnte) bleibt ein offener Punkt.
-
-Erwartetes Format (Pfad über `USMEDIAKIT_PROVIDERS_CONFIG`):
+Erwartetes Format (Pfad über `USMEDIAKIT_PROVIDERS_CONFIG`, siehe auch
+`docs/providers.md` und `config/providers.example.yaml`):
 
 ```yaml
 providers:

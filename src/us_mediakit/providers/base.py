@@ -1,7 +1,7 @@
 """Abstrakte Provider-Schnittstellen.
 
-`us_mediakit` selbst hat keinen voreingestellten KI-Anbieter (siehe Programmierplan
-Abschnitt 2) — jede konkrete Implementierung unter `providers/` (Real-ESRGAN,
+`us_mediakit` selbst hat keinen voreingestellten KI-Anbieter — jede konkrete
+Implementierung unter `providers/` (Real-ESRGAN,
 CodeFormer, SeedVR2, claid.ai, ein generischer OpenAI-kompatibler Vision-Chat) erfüllt
 eine dieser beiden Schnittstellen. Ob und welche aktiv ist, entscheidet ausschließlich
 die Konfiguration der jeweiligen Instanz.

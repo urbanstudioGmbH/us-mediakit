@@ -135,7 +135,8 @@ def test_apply_fit_marks_ai_pending_when_ai_requested_and_upscaling():
     mode = {"w": 500, "h": 500, "fit": "full"}
     result = transform.apply_fit(img, mode, ai="real-esrgan")
     assert result.ai_pending is True
-    # Ohne tatsächlichen KI-Aufruf (Phase 5) bleibt das Bild an der Zwischengröße.
+    # apply_fit ruft den Provider nicht selbst auf — das Bild bleibt an der Zwischengröße,
+    # der eigentliche KI-Aufruf passiert eine Ebene höher (siehe providers/, api/v1/ai_upscale.py).
     assert result.image.size == (100, 100)
 
 

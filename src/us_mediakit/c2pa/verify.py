@@ -23,7 +23,7 @@ def verify(data: bytes, mime_type: str) -> VerificationResult:
     Ein selbst signiertes Testzertifikat ohne Trust-Anker liefert korrekt "Invalid" mit
     dem Grund `signingCredential.untrusted` — das ist erwartetes Verhalten, kein Fehler
     im Code. Für produktiv vertrauenswürdige Signaturen braucht es ein über das
-    C2PA-Conformance-Programm ausgestelltes Zertifikat (siehe Programmierplan Abschnitt 9).
+    C2PA-Conformance-Programm ausgestelltes Zertifikat (siehe docs/c2pa-conformance.md).
     """
     reader = c2pa.Reader.try_create(mime_type, io.BytesIO(data))
     if reader is None:

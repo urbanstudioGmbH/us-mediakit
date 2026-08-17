@@ -1,8 +1,7 @@
 # API-Referenz
 
-Diese Datei wächst mit jeder Phase (siehe Programmierplan Abschnitt 10). Vollständig
-dokumentiert: Zuschnitt (Phase 1), Metadaten (Phase 2), C2PA (Phase 3), Netzwerk-Dienst/
-Konten/Metering (Phase 4), KI-Provider (Phase 5), Wasserzeichen (Phase 6).
+Vollständige Referenz für Zuschnitt, Metadaten, C2PA, Netzwerk-Dienst/Konten/Metering,
+KI-Provider und Wasserzeichen.
 
 Alle `/v1/*`- und `/admin/*`-Endpunkte sind über den Netzwerk-Dienst erreichbar
 (`us-mediakit serve`, siehe [`operations.md`](operations.md)). Die darunterliegenden
@@ -68,10 +67,10 @@ Library-Ebene: `us_mediakit.metadata.gps.strip_gps(data: bytes) -> bytes`.
 
 **Kein separat aufzurufendes Feature.** Jede über `thumbnail`/`generate_thumbnail` erzeugte
 Bildvariante bekommt die Metadaten des Originals automatisch zurückgeschrieben — Standard ist
-an (`carry_metadata: true`), analog zur C2PA-Propagationsregel aus Abschnitt 5a des
-Programmierplans. Abschalten mit `--no-carry-metadata` bzw. `carry_metadata=False`.
+an (`carry_metadata: true`), analog zur C2PA-Propagationsregel weiter unten.
+Abschalten mit `--no-carry-metadata` bzw. `carry_metadata=False`.
 
-**Bekannte Scope-Grenze in Phase 2:** Bei Video-Frame- oder PDF-Seiten-Extraktion
+**Bekannte Scope-Grenze:** Bei Video-Frame- oder PDF-Seiten-Extraktion
 (`--video`/`--pdf`) wird die Metadaten-Übernahme ausgelassen — das extrahierte Rasterbild hat
 keine sinnvoll übertragbaren Bild-Metadaten, und ein Mapping von Video-/PDF-Container-Metadaten
 auf Bild-Metadaten ist hier nicht spezifiziert.
@@ -81,12 +80,12 @@ auf Bild-Metadaten ist hier nicht spezifiziert.
 `us_mediakit.metadata.exiftool_client.ExifToolClient` hält einen einzigen `exiftool`-Prozess im
 `-stay_open`-Modus am Leben (kein Perl-Neustart pro Aufruf). Ein Client-Objekt ist für **einen**
 Worker/Thread gedacht — parallele Aufrufe über denselben Client werden serialisiert
-(`threading.Lock`), nicht parallel im selben Prozess verarbeitet. Im Netzwerk-Dienst (Phase 4)
+(`threading.Lock`), nicht parallel im selben Prozess verarbeitet. Im Netzwerk-Dienst
 bekommt jeder Worker-Prozess seinen eigenen `ExifToolClient`.
 
 ## C2PA / Content Credentials
 
-Grundlagen und die Propagations-Pflichtprüfung (Abschnitt 5a) sind in
+Grundlagen und die Propagations-Pflichtprüfung sind in
 [`c2pa-concepts.md`](c2pa-concepts.md) erklärt. Hier nur die Aufrufe.
 
 ### Prüfen
@@ -131,8 +130,8 @@ us-mediakit thumbnail photo.jpg --mode showcase_medium \
 ```
 
 `overrides.json`: `{"digital_source_type": "algorithmicallyEnhanced"}` — nur nötig, wenn die
-Quelle selbst kein C2PA-Manifest und kein IPTC-`DigitalSourceType`-Feld trägt (Fall 3 aus
-Abschnitt 5a). Abschalten mit `--no-carry-c2pa`.
+Quelle selbst kein C2PA-Manifest und kein IPTC-`DigitalSourceType`-Feld trägt (siehe
+[`c2pa-concepts.md`](c2pa-concepts.md)). Abschalten mit `--no-carry-c2pa`.
 
 Library-Ebene: `ThumbnailRequest.c2pa_signer_config`/`c2pa_digital_source_type`/`c2pa_actions`/
 `c2pa_assertions`/`carry_c2pa`, ausgewertet von `us_mediakit.c2pa.propagate.propagate`, das
@@ -175,7 +174,7 @@ Auf jedem `/v1/*`-Endpunkt verfügbar:
 | Methode & Pfad | Zweck |
 |---|---|
 | `GET /admin/accounts/{account_ref}/usage` | Aggregierte Nutzung nach Operation (`count`, `credits`, `bytes_in`, `bytes_out`), optional `?from=`/`?to=` (ISO-8601). Für die Anzeige im Kundenbereich. |
-| `GET /admin/usage/export` | Cursor-basiert (`since_id`, `limit`, Default 500, Max 5000): liefert `UsageEvent`-Zeilen mit `id > since_id`, aufsteigend, plus `next_since_id` für den nächsten Poll. Für den Guthaben-Abzug im Kundenbereich — siehe Abschnitt 9 des Programmierplans zur Abstimmung des Poll-Intervalls. |
+| `GET /admin/usage/export` | Cursor-basiert (`since_id`, `limit`, Default 500, Max 5000): liefert `UsageEvent`-Zeilen mit `id > since_id`, aufsteigend, plus `next_since_id` für den nächsten Poll. Für den Guthaben-Abzug im Kundenbereich (Poll-Intervall mit dem Kundenbereich abstimmen, Empfehlung 1–2 Minuten). |
 
 ### `GET /health`
 
@@ -190,9 +189,9 @@ siehe [`operations.md`](operations.md#rate-limiting--drei-unabhängige-ebenen).
 ## Wasserzeichen
 
 Drei getrennte Operationen — sichtbares Einblenden, unsichtbares Embedding und
-Erkennung sind eigene Bausteine, keine Varianten eines Features (siehe Programmierplan
-Phase 6). `POST /v1/watermark` deckt Einblenden/Embedding ab (`mode` unterscheidet),
-`POST /v1/watermark/detect` die Erkennung.
+Erkennung sind eigene Bausteine, keine Varianten eines Features. `POST /v1/watermark`
+deckt Einblenden/Embedding ab (`mode` unterscheidet), `POST /v1/watermark/detect` die
+Erkennung.
 
 ### Sichtbar
 
@@ -227,20 +226,20 @@ curl -X POST http://localhost:8000/v1/watermark -H "Authorization: Bearer $KEY" 
 `reference_id` (4 Byte, hex-kodiert) ist optional — ohne Angabe wird eine zufällige
 erzeugt und in der Antwort zurückgegeben. **Die Zuordnung "Referenz-ID → welches
 Asset/Konto" führt der Aufrufer selbst** — us-mediakit legt dafür keine eigene Tabelle
-an (wie bei der Account-Default-Provider-Auflösung in Phase 5).
+an (wie bei der Account-Default-Provider-Auflösung).
 
 Bilder müssen größer als 256×256 Pixel sein, sonst `422`. Technik: DWT-DCT-SVD über
 [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark) — dieselbe,
 mit der Stable Diffusion seine generierten Bilder standardmäßig markiert.
 
-**Eigene Messergebnisse zur Robustheit** (nicht nur Herstellerangabe, siehe
-`us_mediakit/watermark/invisible.py`): Auf echten Fotos übersteht die reine Erkennung
-moderate JPEG-Nachkompression bis Qualität ~80, bitgenaue Referenz-ID-Wiederherstellung
-erst ab Qualität ≥ 90. Aggressive Kompression und jedes nachträgliche Resize zerstören
-das Signal typischerweise — deshalb ist das Wasserzeichen eine eigenständige Operation,
+**Zur Robustheit:** Auf echten Fotos übersteht die reine Erkennung moderate
+JPEG-Nachkompression bis Qualität ~80, bitgenaue Referenz-ID-Wiederherstellung erst ab
+Qualität ≥ 90. Aggressive Kompression und jedes nachträgliche Resize zerstören das
+Signal typischerweise — deshalb ist das Wasserzeichen eine eigenständige Operation,
 anzuwenden auf das tatsächlich ausgelieferte Endergebnis, nicht automatisch an
 `thumbnail` gekoppelt. Auf texturarmen/synthetischen Bildern (kein Foto) versagt die
-Einbettung fast vollständig.
+Einbettung fast vollständig — die Methode braucht die Frequenzstruktur echter
+Fotoinhalte, um Spielraum zum Einbetten zu haben.
 
 **Abhängigkeitshinweis:** Das `[watermark]`-Extra installiert über `invisible-watermark`
 auch PyTorch (mehrere hundert MB) — die Bibliothek importiert ihr GAN-basiertes

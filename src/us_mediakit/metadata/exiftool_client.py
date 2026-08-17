@@ -1,7 +1,7 @@
 """Langlebiger exiftool-Subprozess ("-stay_open"-Modus).
 
 `exiftool` selbst startet (Perl-Interpreter-Start) mit einigen zehn Millisekunden pro
-Aufruf — bei vielen Anfragen pro Sekunde (Netzwerk-Dienst, Phase 4) summiert sich das.
+Aufruf — bei vielen Anfragen pro Sekunde im Netzwerk-Dienst summiert sich das.
 Der "-stay_open True"-Modus hält einen einzigen exiftool-Prozess dauerhaft am Leben:
 Kommandos werden zeilenweise über stdin geschickt, durch eine `-executeNNNN`-Zeile
 abgeschlossen, die Antwort endet mit der dazu passenden `{readyNNNN}`-Markierung auf
@@ -11,8 +11,7 @@ eindeutig ihrem Kommando zuordnen zu können.
 
 Ein Client-Objekt entspricht **einem** Worker/Thread — der exiftool-Prozess verarbeitet
 Kommandos ausschließlich seriell, ein `threading.Lock` verhindert das Verschränken
-paralleler Aufrufe innerhalb desselben Clients (siehe Programmierplan Abschnitt 7,
-"ein langlebiger Prozess pro Worker").
+paralleler Aufrufe innerhalb desselben Clients.
 """
 
 from __future__ import annotations

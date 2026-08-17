@@ -28,9 +28,7 @@ enthält nur `face_restore.codeformer` (den Zusatzschritt-Preis), keinen
 ## Konfiguration
 
 Über eine YAML-Datei (`USMEDIAKIT_PROVIDERS_CONFIG`, Beispiel in
-[`config/providers.example.yaml`](../src/us_mediakit/config/providers.example.yaml)) —
-**vorläufige Entscheidung**, kein endgültig festgelegtes Format (siehe Programmierplan
-Abschnitt 9: "Provider-Konfigurationsformat final festlegen" ist ein offener Punkt).
+[`config/providers.example.yaml`](../src/us_mediakit/config/providers.example.yaml)).
 
 ```yaml
 providers:
@@ -91,6 +89,17 @@ Dienst nicht OpenAI-chat-API-kompatibel ist.
 
 ## Ressourcenbedarf (Serverplanung)
 
-Siehe Phase 5 im Programmierplan für die Festplatten-/VRAM-Tabelle der
-Real-ESRGAN/CodeFormer/SeedVR2-Varianten — hier nicht dupliziert, da modellspezifisch
-und vor Rollout gegen die Ziel-Hardware zu verifizieren.
+Real-ESRGAN und CodeFormer laufen auf praktisch jedem Server, auch ohne GPU (CPU-Fallback
+deutlich langsamer). SeedVR2 braucht in jeder Variante eine dedizierte Grafikkarte.
+
+| Modell/Variante | Festplatte | VRAM | Ohne GPU nutzbar? |
+|---|---|---|---|
+| Real-ESRGAN (x4plus) | ~65 MB | 2–4 GB | Ja |
+| realesr-general-x4v3 | <20 MB | <2 GB | Ja |
+| GFPGAN v1.4 | 349 MB | vor Rollout messen | vermutlich ja |
+| CodeFormer | ~359 MB | vor Rollout messen | vermutlich ja |
+| SeedVR2-3B (FP16 / INT8) | 6,78 GB / 3,46 GB | >16 GB (FP16) / geringer (INT8) | Nein |
+| SeedVR2-7B (FP16 / INT8/FP8) | 16,5 GB / ~8,3 GB | deutlich >16 GB (FP16) / geringer (INT8/FP8) | Nein |
+
+Werte für SeedVR2/GFPGAN/CodeFormer vor Rollout gegen die tatsächliche Ziel-Hardware
+verifizieren (`nvidia-smi` während der Verarbeitung).

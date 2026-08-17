@@ -1,8 +1,7 @@
 """Real-ESRGAN als eigener Provider-Prozess, angesprochen über den generischen
 Bild-rein/Bild-raus-HTTP-Vertrag (siehe `image_enhance.py`).
 
-Läuft nicht in-process — Modellgewichte werden nicht mit us-mediakit ausgeliefert,
-siehe Programmierplan Abschnitt 2.
+Läuft nicht in-process — Modellgewichte werden nicht mit us-mediakit ausgeliefert.
 """
 
 from __future__ import annotations

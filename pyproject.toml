@@ -10,6 +10,7 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 authors = [
+    { name = "Marian Feiler", email = "mf@urbanstudio.de" },
     { name = "urbanstudio GmbH", email = "post@urbanstudio.de" },
 ]
 classifiers = [

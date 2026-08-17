@@ -2,9 +2,9 @@
 
 `only_if_empty` (Default an): bevor überhaupt ein Modell aufgerufen wird, werden die
 Ziel-Metadatenfelder gelesen. Sind sie bereits belegt, wird die Operation ganz
-ausgelassen — "skipped_existing ohne Kosten" laut Programmierplan Abschnitt 7 heißt hier
-wörtlich: kein `usage_events`-Eintrag, keine Abrechnung, nicht nur 0 Credits bei
-trotzdem durchgeführter Operation.
+ausgelassen — `skipped_existing` bedeutet wörtlich kein Modell-Aufruf: kein
+`usage_events`-Eintrag, keine Abrechnung, nicht nur 0 Credits bei trotzdem
+durchgeführter Operation.
 """
 
 from __future__ import annotations

@@ -2,21 +2,26 @@
 
 Python-Library, CLI und optionaler Netzwerkdienst für Bild-Metadaten (EXIF/IPTC/XMP), Content Credentials (C2PA) und KI-gestützte Bildverarbeitung — Resize/Crop, Wasserzeichen, KI-Upscaling und KI-Bildbeschreibung, mit durchgängiger Provenienz-Weiterreichung bei jeder erzeugten Bildvariante.
 
-**Status:** alle sechs geplanten Phasen umgesetzt (Zuschnitt, Metadaten, C2PA Content
-Credentials, Netzwerk-Dienst mit Konten/Metering, KI-Provider, Wasserzeichen). Offene
-Punkte vor Produktivbetrieb (Steuerberater-Bestätigung der Aufbewahrungsfristen,
-C2PA-Conformance-Zertifikat, Modell-Gewichte final kalibrieren, ...) stehen im internen
-Programmierplan, nicht hier.
+## Features
 
-## Ziele
+**Bildverarbeitung**
+- Vier Fit-Modi (`crop`/`greedycrop`/`greedyscalecrop`/`full`) für Zuschnitt/Skalierung, inklusive EXIF-Rotationskorrektur
+- HEIC/AVIF-Erkennung, Video-Frame- und PDF-Seiten-Extraktion als Bildquelle
 
-- [x] Resize/Crop/Skalierung wie in der bisherigen PHP-Lösung, inklusive EXIF-Rotationskorrektur
-- [x] EXIF/IPTC/XMP lesen und schreiben, Content Credentials (C2PA) prüfen und erzeugen
-- [x] Metadaten und C2PA-Herkunftsnachweis werden bei jeder erzeugten Bildvariante automatisch geprüft und weitergereicht
-- [x] Nutzbar als Library, CLI-Tool und systemd-Dienst mit JSON-API
-- [x] KI-Upscaling/Bildverbesserung über austauschbare Provider (u. a. selbst gehostete Modelle)
-- [x] KI-generierte Bildbeschreibungen/Alt-Texte über eine generische, OpenAI-kompatible Schnittstelle
-- [x] Sichtbares und unsichtbares Wasserzeichen sowie Erkennung unsichtbarer Wasserzeichen
+**Metadaten & Provenienz**
+- EXIF/IPTC/XMP lesen und schreiben, gezieltes Entfernen von Standortdaten (`strip_gps`)
+- Content Credentials (C2PA) prüfen, erzeugen und automatisch an jede erzeugte Bildvariante weiterreichen
+
+**Netzwerk-Dienst**
+- API-Keys, Credits-basierte Abrechnung, Idempotenz (`request_id`) und Kostenschätzung (`dry_run`)
+- Rate-Limiting auf mehreren Ebenen, systemd-/nginx-Betriebsdateien inklusive
+
+**KI-Funktionen**
+- Bild-Upscaling/-Verbesserung über austauschbare Provider (Real-ESRGAN, CodeFormer, SeedVR2, claid.ai, eigene), mit Fallback bei Ausfall
+- Bildbeschreibungen über eine generische, OpenAI-kompatible Schnittstelle
+
+**Wasserzeichen**
+- Sichtbares Wasserzeichen (Logo/Text) und unsichtbares Wasserzeichen samt Erkennung
 
 ## Quickstart
 
@@ -51,7 +56,8 @@ USMEDIAKIT_ADMIN_TOKEN=dev-token us-mediakit serve
 
 Vollständige Endpunkt-Referenz in [`docs/api-reference.md`](docs/api-reference.md),
 Produktivbetrieb (systemd, nginx, Hardening) in [`docs/operations.md`](docs/operations.md),
-KI-Provider konfigurieren in [`docs/providers.md`](docs/providers.md).
+KI-Provider konfigurieren in [`docs/providers.md`](docs/providers.md), C2PA-Zertifikat für
+den Produktivbetrieb beantragen in [`docs/c2pa-conformance.md`](docs/c2pa-conformance.md).
 
 ## Lizenz
 
@@ -59,4 +65,4 @@ Apache License 2.0, siehe [LICENSE](LICENSE).
 
 ## Mitwirken
 
-Contribution-Richtlinien folgen mit dem ersten lauffähigen Release.
+Siehe [CONTRIBUTING.md](CONTRIBUTING.md).

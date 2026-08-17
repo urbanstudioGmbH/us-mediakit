@@ -1,7 +1,6 @@
 """`request_id`-Deduplizierung.
 
-Zwei getrennte Aspekte, die beide zur Idempotenz-Anforderung aus Programmierplan
-Abschnitt 5 gehören:
+Zwei getrennte Aspekte gehören zur Idempotenz-Anforderung:
 
 1. **Kein doppelter `usage_events`-Eintrag** — durchgesetzt über die `UNIQUE`-Constraint
    auf `UsageEvent.request_id` selbst; `is_duplicate_request` prüft das vorab, damit die
@@ -14,8 +13,8 @@ Abschnitt 5 gehören:
    hinter nginx) sieht nicht jeder Worker den Cache der anderen — ein Retry, der auf
    einem anderen Worker landet, würde die Pipeline erneut durchlaufen (aber wegen (1)
    ohne doppelte Abrechnung). Für einen echten Mehr-Worker-Cache wäre ein gemeinsamer
-   Speicher (z. B. Redis) nötig — bewusst nicht Teil dieser Phase, da nicht in
-   Abschnitt 2 als Abhängigkeit vorgesehen.
+   Speicher (z. B. Redis) nötig — bewusst nicht Teil des aktuellen Funktionsumfangs, um
+   die Abhängigkeitsliste schlank zu halten.
 """
 
 from __future__ import annotations

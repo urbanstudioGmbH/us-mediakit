@@ -85,7 +85,7 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
     if actual_size and actual_size != (result.target_width, result.target_height):
         note = (
             f" — tatsächlich {actual_size[0]}x{actual_size[1]}, kleiner als angefragt: "
-            "Vergrößerung ohne --ai-Provider wird nicht durchgeführt, siehe Programmierplan"
+            "Vergrößerung ohne --ai-Provider wird nicht durchgeführt, siehe docs/fit-modes.md"
         )
 
     if args.output:

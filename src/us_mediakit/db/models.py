@@ -1,11 +1,11 @@
 """SQLAlchemy-Modelle: `ApiKey`, `UsageEvent`.
 
-`UsageEvent` ist **append-only** (GoBD-Anforderung an die Grundaufzeichnung, siehe
-Programmierplan Abschnitt 4): nach dem Schreiben nie per `UPDATE`/`DELETE` verändern.
+`UsageEvent` ist **append-only** (GoBD-Anforderung an die Grundaufzeichnung): nach dem
+Schreiben nie per `UPDATE`/`DELETE` verändern.
 Löschroutinen dürfen ausschließlich `duration_ms` betreffen (operative Zusatzfelder,
 12 Monate Aufbewahrung), nicht `bytes_in`/`bytes_out`/`credits`/`operation`/
 `account_ref`/`occurred_at` (abrechnungsrelevanter Kern, 8 Jahre Aufbewahrung — fachlich
-vom Steuerberater zu bestätigen, siehe Abschnitt 9).
+vom Steuerberater zu bestätigen).
 """
 
 from __future__ import annotations

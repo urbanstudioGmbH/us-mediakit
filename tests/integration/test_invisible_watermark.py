@@ -68,12 +68,11 @@ def test_detect_on_too_small_image_reports_not_detected_without_error():
 
 
 def test_watermark_survives_moderate_jpeg_recompression():
-    """Eigener Messwert: bei Qualität >= 90 wird auf echten Fotos sowohl der Marker
-    erkannt als auch die Referenz-ID bitgenau wiederhergestellt. Näher an der
-    Überlebensgrenze (eigener Test bei Qualität 85 mit einer anderen Referenz-ID)
-    erkennt der Marker zwar noch zuverlässig, aber einzelne Bits der Referenz-ID
-    können bereits kippen — ein Grund, den Zielwert klar oberhalb der reinen
-    "noch erkannt"-Schwelle zu dokumentieren, nicht direkt an ihr."""
+    """Bei Qualität >= 90 wird auf echten Fotos sowohl der Marker erkannt als auch die
+    Referenz-ID bitgenau wiederhergestellt. Näher an der Überlebensgrenze (Qualität 85
+    mit einer anderen Referenz-ID) erkennt der Marker zwar noch zuverlässig, aber
+    einzelne Bits der Referenz-ID können bereits kippen — der dokumentierte Zielwert
+    liegt deshalb klar oberhalb der reinen "noch erkannt"-Schwelle, nicht direkt an ihr."""
     reference_id = b"\x01\x02\x03\x04"
     watermarked_png = embed(_real_photo_bytes(), reference_id, output_format="PNG")
 

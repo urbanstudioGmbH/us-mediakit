@@ -1,13 +1,10 @@
-"""Anwendungs-Rate-Limiting (Programmierplan Abschnitt 7, Phase 4).
-
-Zwei getrennte Mechanismen, die der Plan als zwei getrennte Dinge nennt:
+"""Anwendungs-Rate-Limiting: zwei getrennte Mechanismen.
 
 - **Credits/Minute pro Plan-Tier** — welcher Tarif ein `account_ref` hat, lebt im
-  Kundenbereich, nicht im Datenmodell von us-mediakit (siehe Abschnitt 4: `ApiKey` kennt
-  keinen Tarif). `CreditsRateLimiter` ist deshalb bewusst tarif-agnostisch: er bekommt
-  das Limit pro Aufruf übergeben, statt es selbst nachzuschlagen. Die tatsächliche
-  Zuordnung Account → Limit ist Teil der Kundenbereich-Abstimmung (Abschnitt 9), nicht
-  Teil dieses Bausteins.
+  Kundenbereich, nicht im Datenmodell von us-mediakit (`ApiKey` kennt keinen Tarif).
+  `CreditsRateLimiter` ist deshalb bewusst tarif-agnostisch: er bekommt das Limit pro
+  Aufruf übergeben, statt es selbst nachzuschlagen. Die tatsächliche Zuordnung
+  Account → Limit ist Sache des Kundenbereichs, nicht Teil dieses Bausteins.
 - **Tarifunabhängige Zusatzschwelle für gleichzeitige Video-/PDF-Jobs** —
   `ConcurrencyLimiter`, unabhängig vom Tarif, schützt den Server unabhängig von der
   Abrechnung vor zu vielen gleichzeitig laufenden ffmpeg/pdftoppm-Prozessen.

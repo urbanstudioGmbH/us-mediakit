@@ -56,7 +56,7 @@ def test_get_duration_seconds():
 def test_extract_frame_clamps_seek_to_duration():
     data = _make_test_video(duration_seconds=2)
     # Anfrage nach Sekunde 8 auf einem 2-Sekunden-Video -> muss geklemmt werden,
-    # statt fehlzuschlagen (Sicherheitsnetz-Anforderung aus dem Programmierplan).
+    # statt fehlzuschlagen.
     frame = video_media.extract_frame(data, seek_seconds=8.0, timeout_seconds=15)
     with Image.open(io.BytesIO(frame)) as img:
         assert img.size == (64, 64)

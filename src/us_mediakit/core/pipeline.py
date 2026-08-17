@@ -1,12 +1,11 @@
 """Kern-Pipeline: decode → transform → re-encode → metadata merge.
 
-Fester Erweiterungspunkt für die Provenienz-Prüfung (siehe Abschnitt 5a des
-Programmierplans): `provenance_hook` wird nach dem Transform-Schritt aufgerufen, bevor
-das Ergebnis zurückgegeben wird. In Phase 1 ist das ein No-Op-Platzhalter; Phase 3 hängt
-hier die echte C2PA-Propagationslogik ein, ohne dass die Pipeline-Struktur nachträglich
-geändert werden muss. Die Metadaten-Übernahme (Phase 2) wird dagegen direkt in diese
-Pipeline fest verdrahtet, sobald `metadata/` existiert — kein eigener Hook, weil sie für
-jede Operation ausnahmslos gilt.
+`provenance_hook` ist der Erweiterungspunkt für die C2PA-Provenienz-Prüfung
+(`us_mediakit.c2pa.propagate.propagate`, siehe dortiger Docstring): wird nach dem
+Transform-Schritt aufgerufen, bevor das Ergebnis zurückgegeben wird, und verhält sich
+ohne konfiguriertes Zertifikat wie ein No-Op. Die Metadaten-Übernahme ist dagegen fest
+in diese Pipeline verdrahtet, kein eigener Hook — sie gilt für jede Operation
+ausnahmslos.
 """
 
 from __future__ import annotations
@@ -67,8 +66,8 @@ class ProvenanceHook(Protocol):
 
 
 def _default_provenance_hook(*, source: bytes, result: bytes, request: ThumbnailRequest) -> bytes:
-    """Echte Provenienz-Propagation aus Phase 3 (siehe Abschnitt 5a). Verhält sich wie ein
-    No-Op, solange kein `c2pa_signer_config` konfiguriert ist — der Import liegt hier
+    """C2PA-Provenienz-Propagation, siehe `us_mediakit.c2pa.propagate`. Verhält sich wie
+    ein No-Op, solange kein `c2pa_signer_config` konfiguriert ist — der Import liegt hier
     lokal in der Funktion, um einen Modul-Ladezyklus core.pipeline ↔ c2pa.propagate zu
     vermeiden (propagate.py importiert ThumbnailRequest nur für Typprüfungen)."""
     from us_mediakit.c2pa.propagate import propagate
@@ -136,12 +135,11 @@ def generate_thumbnail(
     image_to_save.save(buffer, format=save_format, **save_kwargs)
     encoded = buffer.getvalue()
 
-    # Metadaten-Übernahme (Phase 2, siehe Abschnitt 7 des Programmierplans): jede erzeugte
-    # Variante bekommt die EXIF/IPTC/XMP-Daten des Originals zurückgeschrieben — kein
-    # separat aufzurufender Schritt. Bewusst ausgenommen: Video-/PDF-Quellen, weil das
-    # extrahierte Frame keine sinnvoll übertragbaren Bild-Metadaten besitzt und die
-    # Container-Metadaten von Video/PDF ein eigenes, hier nicht spezifiziertes Mapping
-    # bräuchten (dokumentierte Scope-Grenze für Phase 2, keine übersehene Lücke).
+    # Metadaten-Übernahme: jede erzeugte Variante bekommt die EXIF/IPTC/XMP-Daten des
+    # Originals zurückgeschrieben — kein separat aufzurufender Schritt. Bewusst
+    # ausgenommen: Video-/PDF-Quellen, weil das extrahierte Frame keine sinnvoll
+    # übertragbaren Bild-Metadaten besitzt und Video-/PDF-Container-Metadaten ein
+    # eigenes Mapping auf Bild-Metadaten bräuchten.
     if request.carry_metadata and not (request.is_video or request.is_pdf):
         encoded = copy_metadata_from(
             original_source,

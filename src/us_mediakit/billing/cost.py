@@ -1,7 +1,7 @@
 """Credits-Berechnung aus `costweights.json`.
 
-Wichtig (Programmierplan Abschnitt 3): einmal berechnete `credits` in `usage_events`
-dürfen sich rückwirkend nie ändern, auch wenn die Datei später angepasst wird. Deshalb
+Wichtig: einmal berechnete `credits` in `usage_events` dürfen sich rückwirkend nie
+ändern, auch wenn die Datei später angepasst wird. Deshalb
 gibt `CostTable.load()` immer auch die `version` mit zurück, die zusammen mit `credits`
 pro `UsageEvent` gespeichert wird (`credits_table_version`).
 

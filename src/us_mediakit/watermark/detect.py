@@ -31,7 +31,7 @@ def detect(data: bytes) -> DetectionResult:
 
     **Wichtige Einschränkung:** `detected=False` ist ein Hinweis, kein Beweis für aktive
     Entfernung — starke Nachbearbeitung (aggressive Kompression, Resize) kann das Signal
-    unabhängig von Absicht abschwächen (siehe eigene Messwerte in `invisible.py`). Ein
+    unabhängig von Absicht abschwächen (siehe Robustheitsangaben in `invisible.py`). Ein
     belastbarer "wurde entfernt"-Nachweis braucht zusätzlich einen Abgleich mit einem
     `usage_events`-Datensatz, der belegt, dass genau dieses Bild ursprünglich markiert wurde.
     """

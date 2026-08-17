@@ -1,7 +1,6 @@
 # Beispiel für USMEDIAKIT_PROVIDERS_CONFIG — kein mitgelieferter Default, jede Instanz
-# konfiguriert ihre eigenen Provider (siehe Programmierplan Abschnitt 2: us_mediakit
-# selbst hat keinen voreingestellten KI-Anbieter). Format vorläufig, siehe
-# us_mediakit/providers/registry.py.
+# konfiguriert ihre eigenen Provider (us_mediakit selbst hat keinen voreingestellten
+# KI-Anbieter). Details siehe docs/providers.md und us_mediakit/providers/registry.py.
 
 providers:
   caption:

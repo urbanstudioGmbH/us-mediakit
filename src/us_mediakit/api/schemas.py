@@ -1,14 +1,10 @@
 """Pydantic-Schemas für die HTTP-Ebene.
 
-Bewusste Scope-Entscheidung: Die Bibliotheks- und CLI-Ebene (Phasen 1–3) nutzen
-Dataclasses (`ThumbnailRequest`, `SignRequest`, ...) — dieselben Objekte in Pydantic
-umzuschreiben, nur damit "eine Schema-Quelle" im Sinn von Abschnitt 5 wortwörtlich
-zutrifft, hätte die bereits getestete Bibliotheksebene unnötig angefasst. Diese Datei
-ist die eine Schema-Quelle *für die HTTP-Ebene*; die Endpunkte übersetzen zwischen
-Pydantic-Request und den bestehenden Dataclasses.
+Die Bibliotheks- und CLI-Ebene nutzt Dataclasses (`ThumbnailRequest`, `SignRequest`,
+...); diese Datei ist die Schema-Quelle *für die HTTP-Ebene* — die Endpunkte
+übersetzen zwischen Pydantic-Request und den bestehenden Dataclasses.
 
-Bilddaten reisen als Base64-String im JSON-Body (siehe Programmierplan Abschnitt 5:
-"Alle Endpunkte nehmen/liefern JSON").
+Bilddaten reisen als Base64-String im JSON-Body.
 """
 
 from __future__ import annotations

@@ -1,10 +1,9 @@
-"""Provenienz-Propagation — die Pflichtprüfung aus Programmierplan Abschnitt 5a.
+"""Provenienz-Propagation — die Pflichtprüfung vor jeder derivat-erzeugenden Operation.
 
 Betrifft jede derivat-erzeugende Operation: `thumbnail`, `ai_upscale`, `watermark`,
 `meta.write` mit Re-Encode. Kein separat aufzurufendes Feature, sondern eine feste
-Pipeline-Regel — `propagation_hook` erfüllt exakt die `ProvenanceHook`-Schnittstelle aus
-`core.pipeline` und wird dort als der reale (nicht mehr No-Op-) Erweiterungspunkt
-eingehängt.
+Pipeline-Regel — `propagate` erfüllt exakt die `ProvenanceHook`-Schnittstelle aus
+`core.pipeline` und ist dort als Erweiterungspunkt eingehängt.
 
 Ablauf, unabhängig davon, ob der Aufrufer explizit danach fragt:
 

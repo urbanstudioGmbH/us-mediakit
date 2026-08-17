@@ -41,11 +41,12 @@ das Preset von sich aus so konfiguriert ist.
 
 ![full](images/full.png)
 
-**Wichtige Einschränkung, keine neue Limitierung:** Ist die Zielgröße größer als die Quelle
-(`scale > 1`) und ist **kein** `ai`-Provider angegeben, wird **nicht** vergrößert — das Ergebnis
-bleibt kleiner als angefragt. Grund: Eine reine bikubische Vergrößerung ist nicht das gewünschte
-Standardverhalten, sondern nur mit einem konfigurierten KI-Upscaling-Provider sinnvoll (siehe
-Phase 5 im Programmierplan). Die CLI weist beim Auftreten dieses Falls ausdrücklich darauf hin.
+**Wichtige Einschränkung:** Ist die Zielgröße größer als die Quelle (`scale > 1`) und ist
+**kein** `ai`-Provider angegeben, wird **nicht** vergrößert — das Ergebnis bleibt kleiner
+als angefragt. Grund: Eine reine bikubische Vergrößerung ist nicht das gewünschte
+Standardverhalten, sondern nur mit einem konfigurierten KI-Upscaling-Provider sinnvoll
+(siehe [`providers.md`](providers.md)). Die CLI weist beim Auftreten dieses Falls
+ausdrücklich darauf hin.
 
 ### Ausrichtung (`xalign`/`yalign`)
 

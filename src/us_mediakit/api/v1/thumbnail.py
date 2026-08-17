@@ -21,9 +21,9 @@ router = APIRouter()
 _cost_table = CostTable.load()
 _response_cache = ResponseCache()
 
-# Tarifunabhängige Zusatzschwelle für gleichzeitige Video-/PDF-Jobs (Programmierplan
-# Abschnitt 7, Phase 4) — unabhängig vom Credits/Minute-Limit pro Plan-Tier, das die
-# Kundenbereich-Zuordnung Account→Limit voraussetzt (siehe billing/rate_limit.py).
+# Tarifunabhängige Zusatzschwelle für gleichzeitige Video-/PDF-Jobs — unabhängig vom
+# Credits/Minute-Limit pro Plan-Tier, das die Kundenbereich-Zuordnung Account→Limit
+# voraussetzt (siehe billing/rate_limit.py).
 _video_pdf_limiter = ConcurrencyLimiter(
     max_concurrent=int(os.environ.get("USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS", "4"))
 )

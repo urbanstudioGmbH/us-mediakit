@@ -40,7 +40,7 @@ Thumbnail 1280×375 (eigenes Manifest, signiert)
 Thumbnail 300×300 (eigenes Manifest, signiert)
 ```
 
-## Die Propagations-Pflichtprüfung (Abschnitt 5a)
+## Die Propagations-Pflichtprüfung
 
 Kein separat aufzurufendes Feature — us-mediakit prüft bei **jeder** derivat-erzeugenden
 Operation automatisch, ob eines von drei Signalen vorliegt, und erzeugt nur dann ein
@@ -62,8 +62,8 @@ die Prüfung ist immer aktiv, das Signieren nur, wenn ein Zertifikat hinterlegt 
 
 ## Eigenes lokales Modell kennzeichnen
 
-Ein selbst gehostetes Vision-/Upscaling-Modell (Phase 5) hat selbst kein
-C2PA-Bewusstsein — es liefert nur Pixel zurück. Damit die KI-Beteiligung trotzdem
+Ein selbst gehostetes Vision-/Upscaling-Modell hat selbst kein C2PA-Bewusstsein — es
+liefert nur Pixel zurück. Damit die KI-Beteiligung trotzdem
 dokumentiert wird, liefert der aufrufende Code den passenden `digital_source_type`
 explizit mit (Fall 3 oben), z. B. `algorithmicallyEnhanced` für ein KI-Upscaling oder
 `compositeSynthetic` für eine vollständig KI-generierte Bildbeschreibung, die als
@@ -77,9 +77,8 @@ selbst signiertes Testzertifikat kann `validation_state: "Valid"` liefern und tr
 den Eintrag `signingCredential.untrusted` in den Validierungsergebnissen tragen: die
 Signatur ist technisch korrekt, der Aussteller ist aber nicht in einer anerkannten
 Trust-Liste. Für produktiv vertrauenswürdige Signaturen braucht es ein über das
-[C2PA-Conformance-Programm](https://c2pa.org/conformance/) ausgestelltes Zertifikat
-(siehe Programmierplan Abschnitt 9 — paralleler Prozess mit Vorlaufzeit, blockiert
-Phase 1–3 nicht).
+[C2PA-Conformance-Programm](https://c2pa.org/conformance/) ausgestelltes Zertifikat —
+siehe [`c2pa-conformance.md`](c2pa-conformance.md) für den Antragsweg.
 
 `tests/fixtures/c2pa/` enthält ein offizielles Testzertifikat aus dem `c2pa-python`-Projekt
 für die eigene Testsuite — ausdrücklich nur für Tests, nie für Produktivbetrieb.

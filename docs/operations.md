@@ -85,8 +85,7 @@ Zwei Optionen:
    von Auth/Abrechnung.
 2. **Credits/Minute pro Plan-Tier** (`us_mediakit.billing.rate_limit.CreditsRateLimiter`):
    bewusst tarif-agnostisch — welches Limit für welchen `account_ref` gilt, kommt vom
-   Kundenbereich (Abstimmung siehe Abschnitt 9 des Programmierplans), nicht aus
-   us-mediakit selbst.
+   Kundenbereich, nicht aus us-mediakit selbst.
 3. **Tarifunabhängige Video-/PDF-Concurrency** (`ConcurrencyLimiter`, direkt im
    `thumbnail`-Endpunkt verdrahtet, `USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS`):
    schützt den Server vor zu vielen gleichzeitigen `ffmpeg`/`pdftoppm`-Prozessen,
@@ -97,8 +96,8 @@ Worker-Prozess. Bei mehreren uvicorn-Workern hinter nginx sieht jeder Worker nur
 eigenen Zustand — korrekt in der Abrechnung (die DB ist die gemeinsame Quelle der
 Wahrheit), aber ein Retry kann auf einem anderen Worker landen und die Pipeline erneut
 durchlaufen, statt aus dem Cache beantwortet zu werden. Für echte Mehr-Worker-Konsistenz
-wäre ein gemeinsamer Speicher (Redis o. Ä.) nötig — bewusst nicht Teil dieser Phase, da
-in Abschnitt 2 des Programmierplans keine entsprechende Abhängigkeit vorgesehen ist.
+wäre ein gemeinsamer Speicher (Redis o. Ä.) nötig — bewusst nicht Teil des aktuellen
+Funktionsumfangs, um die Abhängigkeitsliste schlank zu halten.
 
 ## Monitoring
 

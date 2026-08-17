@@ -5,10 +5,10 @@ eigenständigen, separat abgerechneten Schritt auf (`face_restore.codeformer` in
 `costweights.json`, addiert über `run_metered`s `extra_credits` — siehe dortiger
 Kommentar zur vereinfachten Ein-Event-Abrechnung).
 
-**Fallback bei Nichterreichbarkeit** (Programmierplan Abschnitt 7, Phase 5): schlägt der
-gewählte Provider mit `ProviderUnavailableError` fehl (z. B. claid.ai down), wird auf ein
-einfaches, nicht-KI-gestütztes Resize zurückgefallen, statt die Anfrage scheitern zu
-lassen — Antwort trägt dann `ai_upscale_fallback: true`.
+**Fallback bei Nichterreichbarkeit:** schlägt der gewählte Provider mit
+`ProviderUnavailableError` fehl (z. B. claid.ai down), wird auf ein einfaches,
+nicht-KI-gestütztes Resize zurückgefallen, statt die Anfrage scheitern zu lassen —
+Antwort trägt dann `ai_upscale_fallback: true`.
 """
 
 from __future__ import annotations

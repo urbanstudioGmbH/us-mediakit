@@ -1,5 +1,5 @@
 """Provider-Auflösungsreihenfolge: Request-Angabe > Account-Default > Instanz-Default
-> keiner konfiguriert (siehe Programmierplan Abschnitt 5).
+> keiner konfiguriert.
 
 Bewusst eine reine Funktion ohne eigenen Datenzugriff: "Account-Default" ist eine vom
 Kundenbereich verwaltete Einstellung (kein Feld im `ApiKey`-Datenmodell, siehe Abschnitt

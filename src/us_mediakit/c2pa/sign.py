@@ -1,7 +1,7 @@
 """C2PA-Manifest erzeugen und signieren — erweiterbares Actions-/Assertions-Schema.
 
-**Wichtiges Prinzip (siehe Programmierplan Phase 3):** Ein bestehendes, signiertes
-Manifest wird nie nachträglich verändert/neu signiert — jede Pixel-Änderung würde eine
+**Wichtiges Prinzip:** Ein bestehendes, signiertes Manifest wird nie nachträglich
+verändert/neu signiert — jede Pixel-Änderung würde eine
 vorhandene Signatur ohnehin ungültig machen. Stattdessen bekommt jede Cache-Variante ein
 eigenes, frisches Manifest, das per Ingredient-Assertion (`relationship: "parentOf"`) auf
 das Original verweist. Dadurch bleibt die Provenienzkette über beliebig viele
@@ -28,7 +28,7 @@ class SignerConfig:
     `sign_cert` ist die vollständige Zertifikatskette (Leaf-Zertifikat zuerst, danach
     ggf. Intermediate-CAs). Für Produktivbetrieb muss diese Kette auf ein über das
     C2PA-Conformance-Programm ausgestelltes, vertrauenswürdiges Zertifikat zurückgehen
-    (siehe Programmierplan Abschnitt 9) — ein selbst signiertes Testzertifikat signiert
+    (siehe docs/c2pa-conformance.md) — ein selbst signiertes Testzertifikat signiert
     zwar technisch korrekt, wird aber von jedem Prüfer als "untrusted" markiert.
     """
 

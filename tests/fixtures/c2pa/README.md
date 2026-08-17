@@ -11,6 +11,6 @@ gegen die reale `c2pa-python`-Bibliothek zu prüfen.
 **Nicht für den Produktivbetrieb verwenden.** Ein selbst signiertes bzw. nicht
 trust-anchored Testzertifikat signiert zwar technisch korrekt, wird aber von jedem
 C2PA-Prüfer als `signingCredential.untrusted` markiert — erwartetes, korrektes
-Verhalten (siehe `test_verify.py`). Für produktiv vertrauenswürdige Signaturen braucht
+Verhalten (siehe `test_c2pa.py`). Für produktiv vertrauenswürdige Signaturen braucht
 es ein über das C2PA-Conformance-Programm ausgestelltes Zertifikat, siehe
-Abschnitt 9 des Programmierplans.
+[`docs/c2pa-conformance.md`](../../../docs/c2pa-conformance.md).

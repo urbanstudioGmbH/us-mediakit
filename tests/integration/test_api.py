@@ -280,5 +280,5 @@ def test_c2pa_sign_with_configured_signer(client, raw_api_key, monkeypatch):
     assert has_manifest(signed, "image/jpeg") is True
 
 
-# Alle Endpunkte sind seit Phase 6 echt implementiert — siehe test_caption.py,
-# test_ai_upscale.py, test_watermark_api.py für die jeweiligen Phase-5/6-Endpunkttests.
+# caption/ai_upscale/watermark-Endpunkte werden in eigenen Testdateien abgedeckt:
+# test_caption.py, test_ai_upscale.py, test_watermark_api.py.
