@@ -20,6 +20,8 @@ from PIL import Image
 from us_mediakit.core import formats, security, svg, transform
 from us_mediakit.media import pdf as pdf_media
 from us_mediakit.media import video as video_media
+from us_mediakit.metadata.exiftool_client import ExifToolClient
+from us_mediakit.metadata.write import copy_metadata_from
 
 DEFAULT_QUALITY = 80
 
@@ -41,6 +43,8 @@ class ThumbnailRequest:
     is_pdf: bool = False
     pdf_page: int = 1
     video_seek_seconds: float = video_media.DEFAULT_SEEK_SECONDS
+    carry_metadata: bool = True
+    strip_gps: bool = False
 
 
 @dataclass
@@ -65,7 +69,9 @@ def generate_thumbnail(
     request: ThumbnailRequest,
     *,
     provenance_hook: ProvenanceHook = _noop_provenance_hook,
+    exiftool_client: ExifToolClient | None = None,
 ) -> ThumbnailResult:
+    original_source = request.source
     source = request.source
 
     if request.is_video:
@@ -115,6 +121,20 @@ def generate_thumbnail(
     save_kwargs = {"quality": quality} if save_format in ("JPEG", "WEBP") else {}
     image_to_save.save(buffer, format=save_format, **save_kwargs)
     encoded = buffer.getvalue()
+
+    # Metadaten-Übernahme (Phase 2, siehe Abschnitt 7 des Programmierplans): jede erzeugte
+    # Variante bekommt die EXIF/IPTC/XMP-Daten des Originals zurückgeschrieben — kein
+    # separat aufzurufender Schritt. Bewusst ausgenommen: Video-/PDF-Quellen, weil das
+    # extrahierte Frame keine sinnvoll übertragbaren Bild-Metadaten besitzt und die
+    # Container-Metadaten von Video/PDF ein eigenes, hier nicht spezifiziertes Mapping
+    # bräuchten (dokumentierte Scope-Grenze für Phase 2, keine übersehene Lücke).
+    if request.carry_metadata and not (request.is_video or request.is_pdf):
+        encoded = copy_metadata_from(
+            original_source,
+            encoded,
+            exclude_groups=["GPS"] if request.strip_gps else None,
+            client=exiftool_client,
+        )
 
     encoded = provenance_hook(source=source, result=encoded, request=request)
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import io
+import json
 import sys
 from pathlib import Path
 
@@ -11,6 +12,9 @@ from PIL import Image, UnidentifiedImageError
 
 from us_mediakit import config
 from us_mediakit.core.pipeline import ThumbnailRequest, ThumbnailResult, generate_thumbnail
+from us_mediakit.metadata.gps import strip_gps as strip_gps_tags
+from us_mediakit.metadata.read import read_metadata
+from us_mediakit.metadata.write import write_tags
 
 
 def _describe_actual_size(result: ThumbnailResult) -> tuple[int, int] | None:
@@ -42,6 +46,8 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
         is_video=args.video,
         is_pdf=args.pdf,
         pdf_page=args.pdf_page,
+        carry_metadata=args.carry_metadata,
+        strip_gps=args.strip_gps,
     )
 
     try:
@@ -72,8 +78,37 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
 
 
 def _cmd_meta_read(args: argparse.Namespace) -> int:
-    print("meta read: folgt in Phase 2 (siehe Programmierplan Abschnitt 7).", file=sys.stderr)
-    return 1
+    data = Path(args.source).read_bytes()
+    try:
+        tags = read_metadata(data)
+    except Exception as exc:  # noqa: BLE001 — CLI-Grenze
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(tags, indent=2, ensure_ascii=False, default=str))
+    return 0
+
+
+def _cmd_meta_write(args: argparse.Namespace) -> int:
+    data = Path(args.source).read_bytes()
+    tags: dict[str, str] = {}
+    for assignment in args.set or []:
+        if "=" not in assignment:
+            print(f"Ungültiges --set {assignment!r}, erwarte FIELD=VALUE", file=sys.stderr)
+            return 1
+        key, value = assignment.split("=", 1)
+        tags[key] = value
+
+    try:
+        result = write_tags(data, tags) if tags else data
+        if args.strip_gps:
+            result = strip_gps_tags(result)
+    except Exception as exc:  # noqa: BLE001 — CLI-Grenze
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+
+    Path(args.source).write_bytes(result)
+    print(f"Geschrieben: {args.source}")
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -91,14 +126,25 @@ def build_parser() -> argparse.ArgumentParser:
     thumbnail.add_argument("--pdf", action="store_true")
     thumbnail.add_argument("--pdf-page", type=int, default=1)
     thumbnail.add_argument("--dry-run", action="store_true")
+    thumbnail.add_argument(
+        "--no-carry-metadata", dest="carry_metadata", action="store_false", default=True
+    )
+    thumbnail.add_argument("--strip-gps", action="store_true")
     thumbnail.add_argument("-o", "--output")
     thumbnail.set_defaults(func=_cmd_thumbnail)
 
-    meta = subparsers.add_parser("meta", help="Metadaten lesen/schreiben (Phase 2)")
+    meta = subparsers.add_parser("meta", help="Metadaten lesen/schreiben")
     meta_sub = meta.add_subparsers(dest="meta_command", required=True)
+
     meta_read = meta_sub.add_parser("read")
     meta_read.add_argument("source")
     meta_read.set_defaults(func=_cmd_meta_read)
+
+    meta_write = meta_sub.add_parser("write")
+    meta_write.add_argument("source")
+    meta_write.add_argument("--set", action="append", metavar="FIELD=VALUE")
+    meta_write.add_argument("--strip-gps", action="store_true")
+    meta_write.set_defaults(func=_cmd_meta_write)
 
     return parser
 

@@ -84,3 +84,22 @@ def get_image_type_from_file(path: str) -> str | None:
 
 def get_content_type(image_type: str) -> str | None:
     return CONTENT_TYPES.get(image_type)
+
+
+# Für Subprozess-Aufrufe (exiftool, ffmpeg, pdftoppm), die aus dem Dateinamen auf das
+# Format schließen — Bilddaten liegen in der Pipeline sonst nur als Bytes ohne Dateiname vor.
+EXTENSION_BY_TYPE: dict[str, str] = {
+    "jpg": ".jpg",
+    "png": ".png",
+    "tiff": ".tiff",
+    "tif": ".tiff",
+    "webp": ".webp",
+    "bmp": ".bmp",
+    "heic": ".heic",
+    "avif": ".avif",
+    "svg": ".svg",
+}
+
+
+def get_extension(image_type: str | None) -> str:
+    return EXTENSION_BY_TYPE.get(image_type or "", ".bin")
