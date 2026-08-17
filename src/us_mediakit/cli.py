@@ -11,6 +11,9 @@ from pathlib import Path
 from PIL import Image, UnidentifiedImageError
 
 from us_mediakit import config
+from us_mediakit.c2pa.sign import SignerConfig, SignRequest
+from us_mediakit.c2pa.sign import sign as c2pa_sign
+from us_mediakit.c2pa.verify import verify as c2pa_verify
 from us_mediakit.core.pipeline import ThumbnailRequest, ThumbnailResult, generate_thumbnail
 from us_mediakit.metadata.gps import strip_gps as strip_gps_tags
 from us_mediakit.metadata.read import read_metadata
@@ -36,6 +39,17 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
     source_path = Path(args.source)
     source_bytes = source_path.read_bytes()
 
+    signer_config = None
+    if args.c2pa_cert and args.c2pa_key:
+        signer_config = SignerConfig(
+            sign_cert=Path(args.c2pa_cert).read_bytes(),
+            private_key=Path(args.c2pa_key).read_bytes(),
+        )
+
+    c2pa_overrides: dict = {}
+    if args.c2pa_json:
+        c2pa_overrides = json.loads(Path(args.c2pa_json).read_text(encoding="utf-8"))
+
     request = ThumbnailRequest(
         source=source_bytes,
         mode=presets[args.mode],
@@ -48,6 +62,11 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
         pdf_page=args.pdf_page,
         carry_metadata=args.carry_metadata,
         strip_gps=args.strip_gps,
+        carry_c2pa=args.carry_c2pa,
+        c2pa_signer_config=signer_config,
+        c2pa_digital_source_type=c2pa_overrides.get("digital_source_type"),
+        c2pa_actions=c2pa_overrides.get("actions", []),
+        c2pa_assertions=c2pa_overrides.get("assertions", []),
     )
 
     try:
@@ -111,6 +130,56 @@ def _cmd_meta_write(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_c2pa_verify(args: argparse.Namespace) -> int:
+    data = Path(args.source).read_bytes()
+    mime_type = args.mime_type or "image/jpeg"
+    result = c2pa_verify(data, mime_type)
+
+    if not result.has_manifest:
+        print("Kein C2PA-Manifest gefunden.")
+        return 1
+
+    print(f"validation_state: {result.validation_state}")
+    print(json.dumps(result.validation_results, indent=2, ensure_ascii=False))
+    return 0 if result.validation_state == "Valid" else 1
+
+
+def _cmd_c2pa_sign(args: argparse.Namespace) -> int:
+    data = Path(args.source).read_bytes()
+    mime_type = args.mime_type or "image/jpeg"
+
+    signer_config = SignerConfig(
+        sign_cert=Path(args.cert).read_bytes(),
+        private_key=Path(args.key).read_bytes(),
+    )
+
+    extra_actions = []
+    extra_assertions = []
+    if args.actions_json:
+        payload = json.loads(Path(args.actions_json).read_text(encoding="utf-8"))
+        extra_actions = payload.get("actions", [])
+        extra_assertions = payload.get("assertions", [])
+
+    try:
+        signed = c2pa_sign(
+            SignRequest(
+                data=data,
+                mime_type=mime_type,
+                signer_config=signer_config,
+                digital_source_type=args.source_type,
+                extra_actions=extra_actions,
+                extra_assertions=extra_assertions,
+            )
+        )
+    except Exception as exc:  # noqa: BLE001 — CLI-Grenze
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+
+    Path(args.source).write_bytes(signed)
+    print(f"Signiert: {args.source}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="us-mediakit")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -130,8 +199,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-carry-metadata", dest="carry_metadata", action="store_false", default=True
     )
     thumbnail.add_argument("--strip-gps", action="store_true")
+    thumbnail.add_argument(
+        "--no-carry-c2pa", dest="carry_c2pa", action="store_false", default=True
+    )
+    thumbnail.add_argument("--c2pa-cert", help="PEM-Zertifikatskette für die Provenienz-Signatur")
+    thumbnail.add_argument("--c2pa-key", help="PEM-Privatschlüssel für die Provenienz-Signatur")
+    thumbnail.add_argument(
+        "--c2pa-json",
+        help="JSON-Datei mit optionalem digital_source_type/actions/assertions-Override",
+    )
     thumbnail.add_argument("-o", "--output")
     thumbnail.set_defaults(func=_cmd_thumbnail)
+
+    c2pa_parser = subparsers.add_parser("c2pa", help="Content Credentials prüfen/signieren")
+    c2pa_sub = c2pa_parser.add_subparsers(dest="c2pa_command", required=True)
+
+    c2pa_verify_parser = c2pa_sub.add_parser("verify")
+    c2pa_verify_parser.add_argument("source")
+    c2pa_verify_parser.add_argument("--mime-type")
+    c2pa_verify_parser.set_defaults(func=_cmd_c2pa_verify)
+
+    c2pa_sign_parser = c2pa_sub.add_parser("sign")
+    c2pa_sign_parser.add_argument("source")
+    c2pa_sign_parser.add_argument("--cert", required=True)
+    c2pa_sign_parser.add_argument("--key", required=True)
+    c2pa_sign_parser.add_argument("--source-type", required=True, dest="source_type")
+    c2pa_sign_parser.add_argument("--actions-json")
+    c2pa_sign_parser.add_argument("--mime-type")
+    c2pa_sign_parser.set_defaults(func=_cmd_c2pa_sign)
 
     meta = subparsers.add_parser("meta", help="Metadaten lesen/schreiben")
     meta_sub = meta.add_subparsers(dest="meta_command", required=True)

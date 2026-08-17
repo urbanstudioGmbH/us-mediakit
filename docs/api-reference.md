@@ -78,3 +78,57 @@ auf Bild-Metadaten ist hier nicht spezifiziert.
 Worker/Thread gedacht — parallele Aufrufe über denselben Client werden serialisiert
 (`threading.Lock`), nicht parallel im selben Prozess verarbeitet. Im Netzwerk-Dienst (Phase 4)
 bekommt jeder Worker-Prozess seinen eigenen `ExifToolClient`.
+
+## C2PA / Content Credentials
+
+Grundlagen und die Propagations-Pflichtprüfung (Abschnitt 5a) sind in
+[`c2pa-concepts.md`](c2pa-concepts.md) erklärt. Hier nur die Aufrufe.
+
+### Prüfen
+
+```bash
+us-mediakit c2pa verify photo.jpg
+```
+
+Liefert `validation_state` (`"Valid"`/`"Invalid"`) plus die vollständigen
+Validierungsergebnisse als JSON. Exit-Code 0 nur bei `"Valid"`.
+
+Library-Ebene: `us_mediakit.c2pa.verify.verify(data: bytes, mime_type: str) -> VerificationResult`.
+
+### Signieren
+
+```bash
+us-mediakit c2pa sign photo.jpg --cert cert-chain.pem --key private-key.pem --source-type digitalCapture
+```
+
+`--source-type` akzeptiert Kurznamen aus der IPTC-Vokabularliste (z. B. `digitalCapture`,
+`algorithmicallyEnhanced`, `trainedAlgorithmicMedia`, `compositeSynthetic`) oder eine volle
+IPTC-URL. `--actions-json` erlaubt zusätzliche Actions/Assertions als JSON-Datei
+(`{"actions": [...], "assertions": [...]}`).
+
+Library-Ebene: `us_mediakit.c2pa.sign.sign(SignRequest(...)) -> bytes`.
+
+**Zertifikat für Produktivbetrieb:** Muss über das C2PA-Conformance-Programm ausgestellt
+sein, sonst wird die Signatur zwar kryptographisch korrekt, aber als `signingCredential.untrusted`
+markiert (siehe `c2pa-concepts.md`).
+
+### Automatische Propagation bei jeder erzeugten Bildvariante
+
+Wie die Metadaten-Übernahme: kein separat aufzurufendes Feature, Standard ist an
+(`carry_c2pa: true`). Erzeugt nur dann ein neues Manifest, wenn die Quelle ein Signal trägt
+oder der Aufrufer eines mitliefert (siehe `c2pa-concepts.md`) — nie eine erfundene Provenienz.
+
+```bash
+us-mediakit thumbnail photo.jpg --mode showcase_medium \
+  --c2pa-cert cert-chain.pem --c2pa-key private-key.pem \
+  --c2pa-json overrides.json \
+  -o thumb.jpg
+```
+
+`overrides.json`: `{"digital_source_type": "algorithmicallyEnhanced"}` — nur nötig, wenn die
+Quelle selbst kein C2PA-Manifest und kein IPTC-`DigitalSourceType`-Feld trägt (Fall 3 aus
+Abschnitt 5a). Abschalten mit `--no-carry-c2pa`.
+
+Library-Ebene: `ThumbnailRequest.c2pa_signer_config`/`c2pa_digital_source_type`/`c2pa_actions`/
+`c2pa_assertions`/`carry_c2pa`, ausgewertet von `us_mediakit.c2pa.propagate.propagate`, das
+standardmäßig als Provenienz-Hook in `generate_thumbnail` eingehängt ist.

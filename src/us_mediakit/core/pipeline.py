@@ -12,8 +12,8 @@ jede Operation ausnahmslos gilt.
 from __future__ import annotations
 
 import io
-from dataclasses import dataclass
-from typing import Protocol
+from dataclasses import dataclass, field
+from typing import Any, Protocol
 
 from PIL import Image
 
@@ -45,6 +45,12 @@ class ThumbnailRequest:
     video_seek_seconds: float = video_media.DEFAULT_SEEK_SECONDS
     carry_metadata: bool = True
     strip_gps: bool = False
+    carry_c2pa: bool = True
+    c2pa_signer_config: Any = None  # us_mediakit.c2pa.sign.SignerConfig | None
+    c2pa_digital_source_type: str | None = None
+    c2pa_action: str | None = None  # None = automatisch aus dem Fit-Modus ableiten
+    c2pa_actions: list[dict[str, Any]] = field(default_factory=list)
+    c2pa_assertions: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -60,15 +66,23 @@ class ProvenanceHook(Protocol):
     def __call__(self, *, source: bytes, result: bytes, request: ThumbnailRequest) -> bytes: ...
 
 
-def _noop_provenance_hook(*, source: bytes, result: bytes, request: ThumbnailRequest) -> bytes:
-    """Platzhalter für Phase 3 (siehe Abschnitt 5a) — reicht das Ergebnis unverändert durch."""
-    return result
+def _default_provenance_hook(*, source: bytes, result: bytes, request: ThumbnailRequest) -> bytes:
+    """Echte Provenienz-Propagation aus Phase 3 (siehe Abschnitt 5a). Verhält sich wie ein
+    No-Op, solange kein `c2pa_signer_config` konfiguriert ist — der Import liegt hier
+    lokal in der Funktion, um einen Modul-Ladezyklus core.pipeline ↔ c2pa.propagate zu
+    vermeiden (propagate.py importiert ThumbnailRequest nur für Typprüfungen)."""
+    from us_mediakit.c2pa.propagate import propagate
+
+    return propagate(source=source, result=result, request=request)
+
+
+_CROP_FIT_MODES = ("crop", "greedycrop")
 
 
 def generate_thumbnail(
     request: ThumbnailRequest,
     *,
-    provenance_hook: ProvenanceHook = _noop_provenance_hook,
+    provenance_hook: ProvenanceHook = _default_provenance_hook,
     exiftool_client: ExifToolClient | None = None,
 ) -> ThumbnailResult:
     original_source = request.source
@@ -135,6 +149,10 @@ def generate_thumbnail(
             exclude_groups=["GPS"] if request.strip_gps else None,
             client=exiftool_client,
         )
+
+    if request.c2pa_action is None:
+        effective_fit = request.crop or request.mode.get("fit")
+        request.c2pa_action = "c2pa.cropped" if effective_fit in _CROP_FIT_MODES else "c2pa.resized"
 
     encoded = provenance_hook(source=source, result=encoded, request=request)
 
