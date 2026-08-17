@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "valid_from": "2026-09-01",
+  "weights": {
+    "c2pa.verify": 1,
+    "meta.read": 1.5,
+    "thumbnail": 3,
+    "meta.write": 4,
+    "watermark_visible": 2,
+    "watermark_invisible": 4,
+    "watermark_detect": 1,
+    "c2pa.sign": 6,
+    "pdf": 8,
+    "video": 12,
+    "ai_upscale.real-esrgan": 5,
+    "ai_upscale.seedvr2-3b": 20,
+    "face_restore.codeformer": 3,
+    "caption.instance-default": 4,
+    "caption.byok": 1
+  },
+  "external_cost_conversion": {
+    "micros_per_credit": 500000,
+    "margin_factor": 1.3
+  }
+}

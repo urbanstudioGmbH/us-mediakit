@@ -1,0 +1,56 @@
+{
+  "gallery_thumbnail": {
+    "name": "Gallery Thumbnail",
+    "w": 300,
+    "h": 300,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  },
+  "picture_thumbnail": {
+    "name": "Picture Thumbnail",
+    "w": 300,
+    "h": 300,
+    "fit": "full"
+  },
+  "showcase_big": {
+    "name": "Showcase Big",
+    "w": 2000,
+    "h": 586,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  },
+  "showcase_medium": {
+    "name": "Showcase Medium",
+    "w": 1280,
+    "h": 375,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  },
+  "showcase_small": {
+    "name": "Showcase Small",
+    "w": 800,
+    "h": 234,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  },
+  "showcase_mobile": {
+    "name": "Showcase Mobile",
+    "w": 768,
+    "h": 225,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  },
+  "blog_overview": {
+    "name": "Blog Overview",
+    "w": 750,
+    "h": 750,
+    "xalign": "center",
+    "yalign": "center",
+    "fit": "full"
+  }
+}

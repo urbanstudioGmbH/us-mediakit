@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "us-mediakit costweights.json",
+  "type": "object",
+  "required": ["version", "valid_from", "weights"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "valid_from": { "type": "string", "format": "date" },
+    "weights": {
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    },
+    "external_cost_conversion": {
+      "type": "object",
+      "required": ["micros_per_credit", "margin_factor"],
+      "properties": {
+        "micros_per_credit": { "type": "integer", "minimum": 1 },
+        "margin_factor": { "type": "number", "minimum": 1 }
+      }
+    }
+  }
+}

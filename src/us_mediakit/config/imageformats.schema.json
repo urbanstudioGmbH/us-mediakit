@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "us-mediakit imageformats.json",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["w", "h", "fit"],
+    "properties": {
+      "name": { "type": "string" },
+      "w": { "type": "integer", "minimum": 1 },
+      "h": { "type": "integer", "minimum": 1 },
+      "fit": {
+        "type": "string",
+        "enum": ["crop", "greedycrop", "greedyscalecrop", "full"]
+      },
+      "xalign": {
+        "oneOf": [
+          { "type": "string", "enum": ["left", "center", "right"] },
+          { "type": "number", "minimum": 0, "maximum": 100 }
+        ]
+      },
+      "yalign": {
+        "oneOf": [
+          { "type": "string", "enum": ["top", "center", "bottom"] },
+          { "type": "number", "minimum": 0, "maximum": 100 }
+        ]
+      },
+      "zoom": {
+        "oneOf": [{ "type": "number" }, { "type": "string" }]
+      },
+      "quality": { "type": "integer", "minimum": 1, "maximum": 100 }
+    }
+  }
+}
