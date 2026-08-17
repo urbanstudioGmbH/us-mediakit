@@ -1,0 +1,23 @@
+# Beispiel für USMEDIAKIT_PROVIDERS_CONFIG — kein mitgelieferter Default, jede Instanz
+# konfiguriert ihre eigenen Provider (siehe Programmierplan Abschnitt 2: us_mediakit
+# selbst hat keinen voreingestellten KI-Anbieter). Format vorläufig, siehe
+# us_mediakit/providers/registry.py.
+
+providers:
+  caption:
+    default: null # z. B. "instance-default", sobald ein Endpunkt konfiguriert ist
+    base_url: "http://localhost:8803/v1"
+    model: "gemma-vision"
+    api_key_env: null
+
+  ai_upscale:
+    default: null # z. B. "real-esrgan"
+    registered:
+      real-esrgan:
+        endpoint: "http://localhost:8801"
+      codeformer:
+        endpoint: "http://localhost:8802"
+      seedvr2-3b:
+        endpoint: "http://localhost:8804"
+      claid-ai:
+        api_key_env: "CLAID_API_KEY"

@@ -36,14 +36,22 @@ def run_metered(
     work: Callable[[], tuple[bytes, dict[str, Any]]],
     provider: str | None = None,
     external_cost_micros: int | None = None,
+    extra_credits: float = 0.0,
 ) -> dict[str, Any]:
     """Führt `work()` genau dann aus, wenn nötig, und liefert das fertige Response-Dict
     (ohne `data`-Feld base64-kodiert einzusetzen — das übernimmt der Aufrufer, da nur er
-    weiß, welches Feld die Ergebnis-Bytes im jeweiligen Response-Schema trägt)."""
+    weiß, welches Feld die Ergebnis-Bytes im jeweiligen Response-Schema trägt).
+
+    `extra_credits` addiert ein zusätzliches, bereits nachgeschlagenes Gewicht (z. B.
+    `face_restore.codeformer` neben `ai_upscale.<provider>`, wenn `restore_faces`
+    einen zweiten Provider-Aufruf auslöst) — vereinfachte Abrechnung als ein
+    kombinierter `UsageEvent` statt zwei getrennter, um das Ein-Event-pro-Aufruf-Modell
+    hier nicht aufzubrechen."""
     if external_cost_micros is not None:
         credits = ctx.cost_table.credits_for_external_cost(external_cost_micros)
     else:
         credits = ctx.cost_table.credits_for_operation(operation)
+    credits += extra_credits
 
     if dry_run:
         return {

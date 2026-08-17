@@ -2,9 +2,9 @@
 
 Diese Datei wächst mit jeder Phase (siehe Programmierplan Abschnitt 10). Aktuell
 dokumentiert: Zuschnitt (Phase 1), Metadaten (Phase 2), C2PA (Phase 3), Netzwerk-Dienst/
-Konten/Metering (Phase 4). KI-Provider und Wasserzeichen folgen in Phase 5/6 — die
-Routen `/v1/caption`, `/v1/ai_upscale`, `/v1/watermark`, `/v1/watermark/detect` existieren
-bereits (Auth/Routing stehen), liefern aber bis dahin `501 Not Implemented`.
+Konten/Metering (Phase 4), KI-Provider (Phase 5). Wasserzeichen folgt in Phase 6 — die
+Routen `/v1/watermark`, `/v1/watermark/detect` existieren bereits (Auth/Routing stehen),
+liefern aber bis dahin `501 Not Implemented`.
 
 Alle `/v1/*`- und `/admin/*`-Endpunkte sind über den Netzwerk-Dienst erreichbar
 (`us-mediakit serve`, siehe [`operations.md`](operations.md)). Die darunterliegenden
@@ -191,6 +191,64 @@ siehe [`operations.md`](operations.md#rate-limiting--drei-unabhängige-ebenen).
 
 ### Noch nicht implementiert
 
-`POST /v1/caption` und `POST /v1/ai_upscale` (Phase 5), `POST /v1/watermark` und
-`POST /v1/watermark/detect` (Phase 6) sind bereits geroutet und erfordern einen gültigen
-API-Key, liefern aber `501 Not Implemented`.
+`POST /v1/watermark` und `POST /v1/watermark/detect` (Phase 6) sind bereits geroutet und
+erfordern einen gültigen API-Key, liefern aber `501 Not Implemented`.
+
+## KI-Provider
+
+Konzepte, Konfiguration und eingebaute Provider in [`providers.md`](providers.md). Hier
+nur die Endpunkt-Aufrufe.
+
+### Bildbeschreibung (`caption`)
+
+```bash
+curl -X POST http://localhost:8000/v1/caption -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "cap-1",
+  "source": "<base64>",
+  "write_to": ["IPTC:ObjectName", "XMP-dc:Description"],
+  "provider_url": "https://byok-endpoint.example/v1",
+  "provider_key": "...",
+  "provider_model": "gpt-4o-mini"
+}'
+```
+
+- **`write_to`** — welche Metadatenfelder die generierte Beschreibung bekommen. Default:
+  `IPTC:ObjectName` + `XMP-dc:Description`.
+- **`only_if_empty`** (Default `true`) — sind alle `write_to`-Felder bereits belegt,
+  wird die Operation ausgelassen, **bevor** irgendein Modell kontaktiert wird:
+  `skipped_existing: true`, `credits_charged: 0`, kein `usage_events`-Eintrag.
+- **`provider_url`/`provider_key`/`provider_model`** — BYOK-Override für diesen einen
+  Aufruf. Ohne diese drei Felder wird der Instanz-Default aus der Provider-Konfiguration
+  verwendet (`503`, falls keiner konfiguriert ist).
+- **`mirror_exif`** — spiegelt die Beschreibung zusätzlich nach `EXIF:ImageDescription`.
+- Provider-Fehler → `502`.
+
+Library-Ebene: `us_mediakit.providers.vision_chat.OpenAICompatibleVisionProvider`.
+
+### KI-Hochskalierung/-Verbesserung (`ai_upscale`)
+
+```bash
+curl -X POST http://localhost:8000/v1/ai_upscale -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "up-1",
+  "source": "<base64>",
+  "provider": "real-esrgan",
+  "target_width": 2000,
+  "target_height": 1500,
+  "restore_faces": true
+}'
+```
+
+- **`provider`** — optional, überschreibt den Instanz-Default für diesen Aufruf. Kein
+  Provider auf keiner Ebene konfiguriert → `422`. Ein registrierter Provider ohne
+  passendes Credits-Gewicht in `costweights.json` (z. B. `codeformer` als primärer
+  `ai_upscale`-Provider statt als `restore_faces`-Zusatzschritt) → ebenfalls `422`.
+- **`restore_faces`** — ruft nach dem Upscaling zusätzlich CodeFormer auf, separat
+  abgerechnet (`face_restore.codeformer`, addiert zum `ai_upscale.<provider>`-Gewicht).
+  Antwort trägt dann `provider: "<provider>+codeformer"`.
+- **Fallback:** ist der gewählte Provider nicht erreichbar, fällt die Antwort auf ein
+  einfaches Resize zurück (`ai_upscale_fallback: true`) statt zu scheitern — abgerechnet
+  wird trotzdem der angefragte Umfang, nicht das tatsächlich erreichte Ergebnis.
+- Provider lehnt die Anfrage ab (4xx) → `502`.
+
+Library-Ebene: `us_mediakit.providers.real_esrgan`/`codeformer`/`seedvr2`/`claid_ai`,
+alle über `us_mediakit.providers.base.ImageEnhanceProvider`.

@@ -2,9 +2,9 @@
 
 Python-Library, CLI und optionaler Netzwerkdienst für Bild-Metadaten (EXIF/IPTC/XMP), Content Credentials (C2PA) und KI-gestützte Bildverarbeitung — Resize/Crop, Wasserzeichen, KI-Upscaling und KI-Bildbeschreibung, mit durchgängiger Provenienz-Weiterreichung bei jeder erzeugten Bildvariante.
 
-**Status:** in aktiver Entwicklung. Phasen 1–4 (Zuschnitt, Metadaten, C2PA Content
-Credentials, Netzwerk-Dienst mit Konten/Metering) sind umgesetzt. KI-Provider und
-Wasserzeichen folgen in Phase 5/6 — siehe Roadmap unten.
+**Status:** in aktiver Entwicklung. Phasen 1–5 (Zuschnitt, Metadaten, C2PA Content
+Credentials, Netzwerk-Dienst mit Konten/Metering, KI-Provider) sind umgesetzt.
+Wasserzeichen folgt in Phase 6 — siehe Roadmap unten.
 
 ## Ziele
 
@@ -12,8 +12,8 @@ Wasserzeichen folgen in Phase 5/6 — siehe Roadmap unten.
 - [x] EXIF/IPTC/XMP lesen und schreiben, Content Credentials (C2PA) prüfen und erzeugen
 - [x] Metadaten und C2PA-Herkunftsnachweis werden bei jeder erzeugten Bildvariante automatisch geprüft und weitergereicht
 - [x] Nutzbar als Library, CLI-Tool und systemd-Dienst mit JSON-API
-- [ ] KI-Upscaling/Bildverbesserung über austauschbare Provider (u. a. selbst gehostete Modelle)
-- [ ] KI-generierte Bildbeschreibungen/Alt-Texte über eine generische, OpenAI-kompatible Schnittstelle
+- [x] KI-Upscaling/Bildverbesserung über austauschbare Provider (u. a. selbst gehostete Modelle)
+- [x] KI-generierte Bildbeschreibungen/Alt-Texte über eine generische, OpenAI-kompatible Schnittstelle
 - [ ] Sichtbares und unsichtbares Wasserzeichen sowie Erkennung unsichtbarer Wasserzeichen
 
 ## Quickstart
@@ -46,7 +46,8 @@ USMEDIAKIT_ADMIN_TOKEN=dev-token us-mediakit serve
 ```
 
 Vollständige Endpunkt-Referenz in [`docs/api-reference.md`](docs/api-reference.md),
-Produktivbetrieb (systemd, nginx, Hardening) in [`docs/operations.md`](docs/operations.md).
+Produktivbetrieb (systemd, nginx, Hardening) in [`docs/operations.md`](docs/operations.md),
+KI-Provider konfigurieren in [`docs/providers.md`](docs/providers.md).
 
 ## Lizenz
 

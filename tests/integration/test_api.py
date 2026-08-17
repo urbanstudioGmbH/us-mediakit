@@ -1,68 +1,15 @@
 import base64
 import io
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from PIL import Image
 
-from us_mediakit.api.app import create_app
-from us_mediakit.api.deps import generate_api_key, get_session
-from us_mediakit.db.engine import create_db_engine, create_session_factory, init_db
+from tests.integration._helpers import auth as _auth
+from tests.integration._helpers import jpeg_b64 as _jpeg_b64
 from us_mediakit.db.models import ApiKey
 
 _FIXTURES = Path(__file__).parent.parent / "fixtures" / "c2pa"
-
-
-@pytest.fixture
-def session_factory(tmp_path):
-    engine = create_db_engine(f"sqlite:///{tmp_path / 'test.db'}")
-    init_db(engine)
-    return create_session_factory(engine)
-
-
-@pytest.fixture
-def client(session_factory, monkeypatch):
-    monkeypatch.setenv("USMEDIAKIT_ADMIN_TOKEN", "test-admin-token")
-
-    app = create_app()
-
-    def override_get_session():
-        with session_factory() as session:
-            yield session
-
-    app.dependency_overrides[get_session] = override_get_session
-    return TestClient(app)
-
-
-@pytest.fixture
-def raw_api_key(session_factory) -> str:
-    generated = generate_api_key()
-    with session_factory() as session:
-        session.add(
-            ApiKey(
-                id=generated.key_prefix,
-                account_ref="acct-1",
-                key_prefix=generated.key_prefix,
-                key_hash=generated.key_hash,
-                label="Test-Key",
-                status="active",
-                created_at=datetime.now(timezone.utc),
-            )
-        )
-        session.commit()
-    return generated.raw_key
-
-
-def _auth(key: str) -> dict:
-    return {"Authorization": f"Bearer {key}"}
-
-
-def _jpeg_b64(w: int = 200, h: int = 100) -> str:
-    buf = io.BytesIO()
-    Image.new("RGB", (w, h), (30, 90, 160)).save(buf, format="JPEG")
-    return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
 # --- health ---
@@ -334,10 +281,10 @@ def test_c2pa_sign_with_configured_signer(client, raw_api_key, monkeypatch):
     assert has_manifest(signed, "image/jpeg") is True
 
 
-# --- Phase 5/6 Stubs ---
+# --- Phase 6 Stubs (caption/ai_upscale sind seit Phase 5 echt, siehe test_caption.py/test_ai_upscale.py) ---
 
 
-@pytest.mark.parametrize("path", ["/v1/caption", "/v1/ai_upscale", "/v1/watermark", "/v1/watermark/detect"])
+@pytest.mark.parametrize("path", ["/v1/watermark", "/v1/watermark/detect"])
 def test_not_yet_implemented_endpoints_return_501(client, raw_api_key, path):
     response = client.post(path, headers=_auth(raw_api_key))
     assert response.status_code == 501

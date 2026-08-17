@@ -101,6 +101,36 @@ class C2paSignApiResponse(OperationResponseBase):
     data: str | None = None
 
 
+class CaptionApiRequest(OperationRequestBase):
+    source: str
+    write_to: list[str] = Field(default_factory=lambda: ["IPTC:ObjectName", "XMP-dc:Description"])
+    mirror_exif: bool = False
+    only_if_empty: bool = True
+    provider_url: str | None = None
+    provider_key: str | None = None
+    provider_model: str | None = None
+
+
+class CaptionApiResponse(OperationResponseBase):
+    data: str | None = None
+    caption: str | None = None
+    skipped_existing: bool = False
+
+
+class AiUpscaleApiRequest(OperationRequestBase):
+    source: str
+    provider: str | None = None
+    target_width: int | None = None
+    target_height: int | None = None
+    restore_faces: bool = False
+
+
+class AiUpscaleApiResponse(OperationResponseBase):
+    data: str | None = None
+    provider: str | None = None
+    ai_upscale_fallback: bool = False
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"
 
