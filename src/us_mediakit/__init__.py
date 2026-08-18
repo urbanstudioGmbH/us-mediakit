@@ -1,4 +1,4 @@
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # HEIC/HEIF ist kein von Pillow selbst mitgeliefertes Format — pillow-heif muss seinen
 # Opener/Encoder einmal registrieren, bevor Image.open()/save() diese Formate kennen.

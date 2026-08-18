@@ -4,6 +4,8 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-08-18
+
 ### Hinzugefügt
 
 - Docker-Support: `Dockerfile`/`docker-compose.yml`, automatisch gebautes und auf
