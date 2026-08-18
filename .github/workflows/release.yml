@@ -21,4 +21,10 @@ jobs:
           pip install build
           python -m build
       - name: Publish to PyPI
+        # Übersprungen, bis PyPI Trusted Publishing für dieses Repo eingerichtet ist
+        # (auf pypi.org unter Account/Projekt -> Publishing, verweist auf genau diesen
+        # Workflow + das "release"-Environment). Ohne das schlägt der OIDC-Trust-Handshake
+        # fehl. Aktivieren: Repository-Variable PYPI_TRUSTED_PUBLISHING_READY=true setzen,
+        # nachdem der Trusted Publisher auf PyPI eingetragen ist.
+        if: vars.PYPI_TRUSTED_PUBLISHING_READY == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
