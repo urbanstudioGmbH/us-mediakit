@@ -19,6 +19,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl ffmpeg poppler-utils
       - name: Install package
         run: pip install -e ".[server,dev]"
+      - name: Install cuttlefish (mock LLM server for vision_chat tests)
+        # Bewusst getrennt von "pip install -e .[dev]": "cuttlefish" ist auf PyPI durch
+        # ein fremdes, unverwandtes Paket belegt, siehe pyproject.toml-Kommentar.
+        run: pip install "cuttlefish @ git+https://github.com/urbanstudioGmbH/cuttlefish.git"
       - name: Run tests
         run: pytest --cov=us_mediakit
       - name: Lint

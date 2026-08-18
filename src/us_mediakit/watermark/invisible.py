@@ -38,10 +38,12 @@ from __future__ import annotations
 import contextlib
 import io
 import warnings
+from typing import TYPE_CHECKING
 
-import cv2
-import numpy as np
 from PIL import Image
+
+if TYPE_CHECKING:
+    import numpy as np
 
 MAGIC = b"USMK"
 REFERENCE_ID_LENGTH_BYTES = 4
@@ -62,10 +64,19 @@ def _suppress_import_warnings():
 
 
 def _pil_to_cv2(image: Image.Image) -> np.ndarray:
+    # cv2/numpy bewusst hier importiert, nicht auf Modulebene: beide kommen nur über das
+    # optionale [watermark]-Extra (invisible-watermark) mit — ein Modul-Import von
+    # invisible.py/detect.py darf ohne dieses Extra nicht crashen, sonst reißt es jeden
+    # Aufrufer mit, der z. B. nur api.app.create_app() importiert (siehe api/v1/watermark.py).
+    import cv2
+    import numpy as np
+
     return cv2.cvtColor(np.array(image.convert("RGB")), cv2.COLOR_RGB2BGR)
 
 
 def _cv2_to_pil(array: np.ndarray) -> Image.Image:
+    import cv2
+
     return Image.fromarray(cv2.cvtColor(array, cv2.COLOR_BGR2RGB))
 
 

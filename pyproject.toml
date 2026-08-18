@@ -47,7 +47,12 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.4",
     "mypy>=1.9",
-    "cuttlefish>=0.3",  # OpenAI-kompatibler Mock-Server, nur für Tests (vision_chat)
+    # cuttlefish (OpenAI-kompatibler Mock-Server für vision_chat-Tests) bewusst NICHT
+    # hier als PyPI-Abhängigkeit gelistet: "cuttlefish" ist auf PyPI durch ein fremdes,
+    # unverwandtes Paket belegt (ein Python-2-only Grep-Tool von 2013). Ein normaler
+    # `pip install`/Release-Build würde damit das falsche Paket ziehen. Stattdessen
+    # manuell installieren: pip install "cuttlefish @ git+https://github.com/urbanstudioGmbH/cuttlefish.git"
+    # (siehe CONTRIBUTING.md und .github/workflows/test.yml).
 ]
 
 [project.urls]

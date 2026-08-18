@@ -171,6 +171,7 @@ def test_watermark_detect_roundtrip_via_api(client, raw_api_key):
     assert body["credits_charged"] == 1  # watermark_detect laut costweights.json
 
 
+@requires_invisible_watermark
 def test_watermark_detect_on_plain_image_reports_not_detected(client, raw_api_key):
     response = client.post(
         "/v1/watermark/detect",
