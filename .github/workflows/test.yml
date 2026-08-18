@@ -21,7 +21,11 @@ jobs:
         run: pip install -e ".[server,dev]"
       - name: Install cuttlefish (mock LLM server for vision_chat tests)
         # Bewusst getrennt von "pip install -e .[dev]": "cuttlefish" ist auf PyPI durch
-        # ein fremdes, unverwandtes Paket belegt, siehe pyproject.toml-Kommentar.
+        # ein fremdes, unverwandtes Paket belegt, siehe pyproject.toml-Kommentar. Nur auf
+        # 3.12 installierbar (cuttlefish selbst verlangt Python >= 3.12) -- auf 3.10/3.11
+        # übersprungen, test_caption.py überspringt die betroffenen Tests dann selbst
+        # (skipif auf `shutil.which("cuttlefish")`).
+        if: matrix.python-version == '3.12'
         run: pip install "cuttlefish @ git+https://github.com/urbanstudioGmbH/cuttlefish.git"
       - name: Run tests
         run: pytest --cov=us_mediakit

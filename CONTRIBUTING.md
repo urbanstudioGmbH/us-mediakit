@@ -14,7 +14,9 @@ pip install "cuttlefish @ git+https://github.com/urbanstudioGmbH/cuttlefish.git"
 Der zweite `pip install` ist bewusst getrennt: `cuttlefish` (der OpenAI-kompatible
 Mock-Server, den die `caption`-Tests gegen einen echten Prozess statt gegen Mocks
 laufen lassen) ist auf PyPI durch ein fremdes, unverwandtes Paket belegt — ein
-`pip install cuttlefish` ohne die Git-URL installiert das falsche Paket.
+`pip install cuttlefish` ohne die Git-URL installiert das falsche Paket. `cuttlefish`
+selbst verlangt Python 3.12+; unter 3.10/3.11 lässt sich dieser Schritt weglassen,
+`tests/integration/test_caption.py` überspringt die betroffenen Tests dann automatisch.
 
 Systemabhängigkeiten (macOS via Homebrew, Debian via `apt`): `exiftool`, `ffmpeg`, `poppler-utils`.
 

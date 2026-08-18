@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import shutil
 import socket
 import subprocess
 import time
@@ -10,6 +11,11 @@ import time
 import pytest
 
 from tests.integration._helpers import auth, jpeg_b64
+
+pytestmark = pytest.mark.skipif(
+    shutil.which("cuttlefish") is None,
+    reason="cuttlefish nicht installiert (verlangt Python >= 3.12, siehe CONTRIBUTING.md)",
+)
 
 
 def _free_port() -> int:
