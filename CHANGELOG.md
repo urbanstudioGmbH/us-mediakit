@@ -22,3 +22,7 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
   Provider-Konfiguration, Fallback auf einfaches Resize bei Provider-Ausfall.
 - Sichtbares Wasserzeichen (Logo/Text), unsichtbares Wasserzeichen (DWT-DCT-SVD) und
   Erkennung als drei getrennte Operationen.
+- Zuschnitt-Ausgabe zusätzlich in AVIF und HEIC/HEIF, mit klarem `422` statt stillem
+  JPEG-Fallback bei unbekannten oder auf der Zielplattform nicht verfügbaren Formaten.
+- Animierter WebP-Ausschnitt aus einem Video (`animated_webp`) als eigene Operation,
+  mit fest gedeckelter Dauer/Framerate/Breite.

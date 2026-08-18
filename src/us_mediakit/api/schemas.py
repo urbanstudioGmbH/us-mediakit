@@ -156,6 +156,22 @@ class WatermarkDetectApiResponse(OperationResponseBase):
     reference_id: str | None = None  # hex
 
 
+class AnimatedWebpApiRequest(OperationRequestBase):
+    source: str = Field(description="Videodaten, Base64-kodiert")
+    start_seconds: float = 0.0
+    duration_seconds: float = 3.0
+    width: int | None = None
+    fps: int = 12
+    quality: int = 75
+
+
+class AnimatedWebpApiResponse(OperationResponseBase):
+    data: str | None = None
+    frame_count: int | None = None
+    target_width: int | None = None
+    target_height: int | None = None
+
+
 class HealthResponse(BaseModel):
     status: str = "ok"
 

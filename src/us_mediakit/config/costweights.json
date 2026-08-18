@@ -5,6 +5,7 @@
     "c2pa.verify": 1,
     "meta.read": 1.5,
     "thumbnail": 3,
+    "animated_webp": 10,
     "meta.write": 4,
     "watermark_visible": 2,
     "watermark_invisible": 4,

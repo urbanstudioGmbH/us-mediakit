@@ -315,6 +315,31 @@ def _cmd_watermark_detect(args: argparse.Namespace) -> int:
     return 0 if result.detected else 1
 
 
+def _cmd_animated_webp(args: argparse.Namespace) -> int:
+    from us_mediakit.media.animated_webp import AnimatedWebpError, extract_animated_webp
+
+    data = Path(args.source).read_bytes()
+    try:
+        result = extract_animated_webp(
+            data,
+            start_seconds=args.start,
+            duration_seconds=args.duration,
+            width=args.width,
+            fps=args.fps,
+            quality=args.quality,
+        )
+    except AnimatedWebpError as exc:
+        print(f"Fehler: {exc}", file=sys.stderr)
+        return 1
+
+    if args.output:
+        Path(args.output).write_bytes(result)
+        print(f"Geschrieben: {args.output}")
+    else:
+        sys.stdout.buffer.write(result)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="us-mediakit")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -424,6 +449,18 @@ def build_parser() -> argparse.ArgumentParser:
     watermark_detect.add_argument("source")
     watermark_detect.add_argument("--json", action="store_true")
     watermark_detect.set_defaults(func=_cmd_watermark_detect)
+
+    animated_webp = subparsers.add_parser(
+        "animated-webp", help="Animierten WebP-Ausschnitt aus einem Video erzeugen"
+    )
+    animated_webp.add_argument("source")
+    animated_webp.add_argument("--start", type=float, default=0.0)
+    animated_webp.add_argument("--duration", type=float, default=3.0)
+    animated_webp.add_argument("--width", type=int, default=None)
+    animated_webp.add_argument("--fps", type=int, default=12)
+    animated_webp.add_argument("--quality", type=int, default=75)
+    animated_webp.add_argument("-o", "--output")
+    animated_webp.set_defaults(func=_cmd_animated_webp)
 
     return parser
 

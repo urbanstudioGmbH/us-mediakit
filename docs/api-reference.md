@@ -36,6 +36,38 @@ us-mediakit thumbnail photo.jpg --mode showcase_medium --output-format avif -o t
   us-mediakit auflöst — bei Unsicherheit lieber AVIF (lizenzfrei, vergleichbare
   Kompressionseffizienz) als Zielformat wählen.
 
+## Animierter WebP-Ausschnitt (`animated_webp`)
+
+Eigene Operation, keine Variante von `thumbnail` — schneidet einen Zeitbereich aus einem
+Video und liefert ihn als animiertes, endlos-loopendes WebP.
+
+```bash
+us-mediakit animated-webp clip.mp4 --start 5 --duration 3 --width 480 --fps 12 -o clip.webp
+```
+
+```bash
+curl -X POST http://localhost:8000/v1/animated_webp -H "Authorization: Bearer $KEY" -d '{
+  "request_id": "clip-1",
+  "source": "<base64>",
+  "start_seconds": 5,
+  "duration_seconds": 3,
+  "width": 480,
+  "fps": 12
+}'
+```
+
+- **`duration_seconds`** — max. 12s, **`fps`** — max. 24, **`duration_seconds * fps`** —
+  max. 200 Frames, **`width`** — max. 1280px. Überschreitung liefert `422`, keine stille
+  Kürzung. `start_seconds`/`duration_seconds` werden auf die tatsächliche Videodauer
+  geklemmt (analog zum `is_video`-Zweig von `thumbnail`).
+- Technik: ffmpeg extrahiert nur die Einzelframes (PNG-Sequenz), Pillow kodiert die
+  Animation — bewusst nicht über ffmpegs eigenen `libwebp`-Encoder, der nur in dafür
+  gebauten ffmpeg-Paketen vorhanden ist.
+- Keine Metadaten-/C2PA-Übernahme (wie beim `is_video`-Zweig von `thumbnail` — ein
+  Video-Ausschnitt hat kein sinnvolles Mapping auf Bild-Metadaten).
+
+Library-Ebene: `us_mediakit.media.animated_webp.extract_animated_webp`.
+
 ## Metadaten
 
 ### Lesen

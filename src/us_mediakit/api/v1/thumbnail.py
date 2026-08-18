@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import base64
-import os
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from us_mediakit import config
 from us_mediakit.api.deps import get_session, require_api_key, try_load_configured_signer_config
+from us_mediakit.api.limits import video_pdf_limiter as _video_pdf_limiter
 from us_mediakit.api.metering import MeteringContext, run_metered
 from us_mediakit.api.schemas import ThumbnailApiRequest, ThumbnailApiResponse
 from us_mediakit.billing.cost import CostTable
 from us_mediakit.billing.idempotency import ResponseCache
-from us_mediakit.billing.rate_limit import ConcurrencyLimiter, ConcurrencyLimitExceeded
+from us_mediakit.billing.rate_limit import ConcurrencyLimitExceeded
 from us_mediakit.core.pipeline import ThumbnailRequest, generate_thumbnail
 from us_mediakit.db.models import ApiKey
 
@@ -20,13 +20,6 @@ router = APIRouter()
 
 _cost_table = CostTable.load()
 _response_cache = ResponseCache()
-
-# Tarifunabhängige Zusatzschwelle für gleichzeitige Video-/PDF-Jobs — unabhängig vom
-# Credits/Minute-Limit pro Plan-Tier, das die Kundenbereich-Zuordnung Account→Limit
-# voraussetzt (siehe billing/rate_limit.py).
-_video_pdf_limiter = ConcurrencyLimiter(
-    max_concurrent=int(os.environ.get("USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS", "4"))
-)
 
 
 @router.post("/v1/thumbnail", response_model=ThumbnailApiResponse)

@@ -7,13 +7,23 @@ from fastapi import FastAPI
 
 from us_mediakit.api.admin import api_keys as admin_api_keys
 from us_mediakit.api.admin import usage as admin_usage
-from us_mediakit.api.v1 import ai_upscale, c2pa, caption, health, meta, thumbnail, watermark
+from us_mediakit.api.v1 import (
+    ai_upscale,
+    animated_webp,
+    c2pa,
+    caption,
+    health,
+    meta,
+    thumbnail,
+    watermark,
+)
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title="us-mediakit", description="Bild-Metadaten, C2PA und KI-Bildverarbeitung")
 
     app.include_router(thumbnail.router)
+    app.include_router(animated_webp.router)
     app.include_router(meta.router)
     app.include_router(c2pa.router)
     app.include_router(caption.router)

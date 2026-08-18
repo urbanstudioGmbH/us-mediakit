@@ -1,12 +1,12 @@
+import base64
 import io
 import shutil
-import subprocess
-import tempfile
-from pathlib import Path
 
 import pytest
 from PIL import Image
 
+from tests.integration._helpers import video_b64 as _video_b64
+from us_mediakit.media import animated_webp as animated_webp_media
 from us_mediakit.media import pdf as pdf_media
 from us_mediakit.media import video as video_media
 
@@ -17,25 +17,7 @@ requires_pdftoppm = pytest.mark.skipif(
 
 
 def _make_test_video(duration_seconds: int = 3) -> bytes:
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        out_path = Path(tmp_dir) / "test.mp4"
-        subprocess.run(
-            [
-                "ffmpeg",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-y",
-                "-f",
-                "lavfi",
-                "-i",
-                f"testsrc=duration={duration_seconds}:size=64x64:rate=10",
-                str(out_path),
-            ],
-            check=True,
-            timeout=30,
-        )
-        return out_path.read_bytes()
+    return base64.b64decode(_video_b64(duration_seconds))
 
 
 def _make_test_pdf() -> bytes:
@@ -69,3 +51,47 @@ def test_render_page_produces_jpeg():
     with Image.open(io.BytesIO(rendered)) as img:
         assert img.format == "JPEG"
         assert img.size[0] > 0 and img.size[1] > 0
+
+
+@requires_ffmpeg
+def test_extract_animated_webp_produces_multi_frame_webp():
+    data = _make_test_video(duration_seconds=3)
+    result = animated_webp_media.extract_animated_webp(
+        data, start_seconds=0.0, duration_seconds=1.0, fps=8
+    )
+    with Image.open(io.BytesIO(result)) as img:
+        assert img.format == "WEBP"
+        assert getattr(img, "n_frames", 1) > 1
+        assert img.size == (64, 64)
+
+
+@requires_ffmpeg
+def test_extract_animated_webp_scales_width():
+    data = _make_test_video(duration_seconds=2)
+    result = animated_webp_media.extract_animated_webp(
+        data, start_seconds=0.0, duration_seconds=1.0, fps=8, width=32
+    )
+    with Image.open(io.BytesIO(result)) as img:
+        assert img.size[0] == 32
+
+
+def test_extract_animated_webp_rejects_duration_over_limit():
+    with pytest.raises(animated_webp_media.AnimatedWebpError, match="duration_seconds"):
+        animated_webp_media.extract_animated_webp(b"not-a-real-video", duration_seconds=999)
+
+
+def test_extract_animated_webp_rejects_fps_over_limit():
+    with pytest.raises(animated_webp_media.AnimatedWebpError, match="fps"):
+        animated_webp_media.extract_animated_webp(b"not-a-real-video", fps=999)
+
+
+def test_extract_animated_webp_rejects_frame_count_over_limit():
+    with pytest.raises(animated_webp_media.AnimatedWebpError, match="Frames"):
+        animated_webp_media.extract_animated_webp(
+            b"not-a-real-video", duration_seconds=10, fps=24
+        )
+
+
+def test_extract_animated_webp_rejects_width_over_limit():
+    with pytest.raises(animated_webp_media.AnimatedWebpError, match="width"):
+        animated_webp_media.extract_animated_webp(b"not-a-real-video", width=9999)

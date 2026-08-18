@@ -86,10 +86,11 @@ Zwei Optionen:
 2. **Credits/Minute pro Plan-Tier** (`us_mediakit.billing.rate_limit.CreditsRateLimiter`):
    bewusst tarif-agnostisch — welches Limit für welchen `account_ref` gilt, kommt vom
    Kundenbereich, nicht aus us-mediakit selbst.
-3. **Tarifunabhängige Video-/PDF-Concurrency** (`ConcurrencyLimiter`, direkt im
-   `thumbnail`-Endpunkt verdrahtet, `USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS`):
-   schützt den Server vor zu vielen gleichzeitigen `ffmpeg`/`pdftoppm`-Prozessen,
-   unabhängig vom Tarif.
+3. **Tarifunabhängige Video-/PDF-Concurrency** (`ConcurrencyLimiter`,
+   `us_mediakit.api.limits.video_pdf_limiter`, `USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS`):
+   eine gemeinsame Instanz für den `is_video`/`is_pdf`-Zweig von `thumbnail` und für
+   `/v1/animated_webp` — schützt den Server vor zu vielen gleichzeitigen
+   `ffmpeg`/`pdftoppm`-Prozessen insgesamt, unabhängig vom Tarif.
 
 **Bekannte Grenze:** Alle In-Prozess-Zustände (Idempotenz-Cache, Rate-Limiter) sind pro
 Worker-Prozess. Bei mehreren uvicorn-Workern hinter nginx sieht jeder Worker nur seinen
