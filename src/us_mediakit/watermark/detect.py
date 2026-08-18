@@ -9,15 +9,11 @@ from __future__ import annotations
 import io
 from dataclasses import dataclass
 
+import numpy as np
 from PIL import Image
 
-from us_mediakit.watermark.invisible import (
-    MAGIC,
-    MIN_DIMENSION,
-    PAYLOAD_LENGTH_BITS,
-    _pil_to_cv2,
-    _suppress_import_warnings,
-)
+from us_mediakit.watermark import _dwt_dct_svd
+from us_mediakit.watermark.invisible import MAGIC, MIN_DIMENSION, PAYLOAD_LENGTH_BITS, _pil_to_cv2
 
 
 @dataclass
@@ -42,11 +38,8 @@ def detect(data: bytes) -> DetectionResult:
             return DetectionResult(detected=False, reference_id=None)
         cv2_image = _pil_to_cv2(img)
 
-    with _suppress_import_warnings():
-        from imwatermark import WatermarkDecoder
-
-    decoder = WatermarkDecoder("bytes", PAYLOAD_LENGTH_BITS)
-    decoded = decoder.decode(cv2_image, "dwtDctSvd")
+    bits = _dwt_dct_svd.extract_bits(cv2_image, PAYLOAD_LENGTH_BITS)
+    decoded = np.packbits(bits).tobytes()
 
     if decoded[: len(MAGIC)] != MAGIC:
         return DetectionResult(detected=False, reference_id=None)

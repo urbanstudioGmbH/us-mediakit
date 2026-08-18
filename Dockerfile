@@ -1,6 +1,6 @@
 # Lean Standardbild: nur das [server]-Extra, SQLite als Default-DB (siehe docs/docker.md).
-# Für MySQL/PostgreSQL oder Wasserzeichen zusätzliche Extras per Build-Arg aktivieren,
-# z. B.: docker build --build-arg EXTRAS=server,postgres .
+# Für MySQL/PostgreSQL zusätzliche Extras per Build-Arg aktivieren, z. B.:
+# docker build --build-arg EXTRAS=server,postgres .
 FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

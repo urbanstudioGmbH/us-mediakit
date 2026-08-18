@@ -3,19 +3,12 @@
 from __future__ import annotations
 
 import base64
-import importlib.util
 import io
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 from tests.integration._helpers import auth
-
-requires_invisible_watermark = pytest.mark.skipif(
-    importlib.util.find_spec("imwatermark") is None,
-    reason="invisible-watermark nicht installiert ([watermark]-Extra)",
-)
 
 _REAL_PHOTO = Path(__file__).parent.parent.parent / "docs" / "images" / "source.png"
 
@@ -84,7 +77,6 @@ def test_watermark_invalid_mode_returns_422(client, raw_api_key):
 # --- unsichtbar ---
 
 
-@requires_invisible_watermark
 def test_watermark_invisible_generates_reference_id_when_omitted(client, raw_api_key):
     response = client.post(
         "/v1/watermark",
@@ -97,7 +89,6 @@ def test_watermark_invisible_generates_reference_id_when_omitted(client, raw_api
     assert len(bytes.fromhex(body["reference_id"])) == 4
 
 
-@requires_invisible_watermark
 def test_watermark_invisible_uses_caller_supplied_reference_id(client, raw_api_key):
     response = client.post(
         "/v1/watermark",
@@ -113,7 +104,6 @@ def test_watermark_invisible_uses_caller_supplied_reference_id(client, raw_api_k
     assert response.json()["reference_id"] == "01020304"
 
 
-@requires_invisible_watermark
 def test_watermark_invisible_rejects_wrong_length_reference_id(client, raw_api_key):
     response = client.post(
         "/v1/watermark",
@@ -128,7 +118,6 @@ def test_watermark_invisible_rejects_wrong_length_reference_id(client, raw_api_k
     assert response.status_code == 422
 
 
-@requires_invisible_watermark
 def test_watermark_invisible_too_small_image_returns_422(client, raw_api_key):
     buf = io.BytesIO()
     Image.new("RGB", (100, 100), (10, 10, 10)).save(buf, format="PNG")
@@ -145,7 +134,6 @@ def test_watermark_invisible_too_small_image_returns_422(client, raw_api_key):
 # --- Erkennung ---
 
 
-@requires_invisible_watermark
 def test_watermark_detect_roundtrip_via_api(client, raw_api_key):
     embed_response = client.post(
         "/v1/watermark",
@@ -171,7 +159,6 @@ def test_watermark_detect_roundtrip_via_api(client, raw_api_key):
     assert body["credits_charged"] == 1  # watermark_detect laut costweights.json
 
 
-@requires_invisible_watermark
 def test_watermark_detect_on_plain_image_reports_not_detected(client, raw_api_key):
     response = client.post(
         "/v1/watermark/detect",

@@ -98,5 +98,3 @@ Healthchecks anzeigt.
   in einem Container (das würde die In-Prozess-Zustände aus `operations.md`
   ["Rate-Limiting"](operations.md#rate-limiting--drei-unabhängige-ebenen) zusätzlich
   fragmentieren).
-- `[watermark]`-Extra ist im Standard-Image bewusst nicht enthalten (PyTorch, mehrere
-  hundert MB) — bei Bedarf `--build-arg EXTRAS=server,watermark`.

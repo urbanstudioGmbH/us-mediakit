@@ -4,6 +4,21 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
 
 ## [Unreleased]
 
+### Hinzugefügt
+
+- Docker-Support: `Dockerfile`/`docker-compose.yml`, automatisch gebautes und auf
+  GitHub Container Registry veröffentlichtes Image (`ghcr.io/urbanstudiogmbh/us-mediakit`).
+
+### Geändert
+
+- Unsichtbares Wasserzeichen nutzt keine externe `invisible-watermark`-Abhängigkeit
+  mehr — der tatsächlich verwendete DWT-DCT-SVD-Algorithmus ist direkt in
+  `watermark/_dwt_dct_svd.py` eingebaut (MIT-Lizenz, mit Attribution), identisches
+  Verhalten. Damit entfällt die PyTorch-Abhängigkeit vollständig (kam nur über eine
+  ungenutzte GAN-basierte Zusatzmethode der Bibliothek) und das `[watermark]`-Extra
+  wird überflüssig: unsichtbares Wasserzeichen ist jetzt immer verfügbar, ohne
+  gesonderte Installation.
+
 ## [1.0.0] - 2026-08-18
 
 ### Hinzugefügt

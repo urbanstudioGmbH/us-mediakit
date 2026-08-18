@@ -278,9 +278,10 @@ erzeugt und in der Antwort zurückgegeben. **Die Zuordnung "Referenz-ID → welc
 Asset/Konto" führt der Aufrufer selbst** — us-mediakit legt dafür keine eigene Tabelle
 an (wie bei der Account-Default-Provider-Auflösung).
 
-Bilder müssen größer als 256×256 Pixel sein, sonst `422`. Technik: DWT-DCT-SVD über
-[`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark) — dieselbe,
-mit der Stable Diffusion seine generierten Bilder standardmäßig markiert.
+Bilder müssen größer als 256×256 Pixel sein, sonst `422`. Technik: DWT-DCT-SVD (dieselbe
+Grundtechnik, mit der Stable Diffusion seine generierten Bilder standardmäßig
+markiert), fest in `us_mediakit.watermark._dwt_dct_svd` eingebaut, keine externe
+Bibliothek — siehe Hinweis unten.
 
 **Zur Robustheit:** Auf echten Fotos übersteht die reine Erkennung moderate
 JPEG-Nachkompression bis Qualität ~80, bitgenaue Referenz-ID-Wiederherstellung erst ab
@@ -291,10 +292,13 @@ anzuwenden auf das tatsächlich ausgelieferte Endergebnis, nicht automatisch an
 Einbettung fast vollständig — die Methode braucht die Frequenzstruktur echter
 Fotoinhalte, um Spielraum zum Einbetten zu haben.
 
-**Abhängigkeitshinweis:** Das `[watermark]`-Extra installiert über `invisible-watermark`
-auch PyTorch (mehrere hundert MB) — die Bibliothek importiert ihr GAN-basiertes
-`rivaGan`-Untermodul beim Laden unbedingt mit, selbst wenn hier nur die leichte
-`dwtDctSvd`-Methode genutzt wird.
+**Abhängigkeitshinweis:** Der DWT-DCT-SVD-Algorithmus ist als reine Bildverarbeitung
+(`numpy`/`opencv-python-headless`/`PyWavelets`, Kern-Abhängigkeiten) direkt in
+`_dwt_dct_svd.py` eingebaut — aus [`invisible-watermark`](https://github.com/ShieldMnt/invisible-watermark)
+übernommen (MIT-Lizenz), aber ohne dessen zusätzliche GAN-basierte `rivaGan`-Methode,
+die beim bloßen Import des Originalpakets unbedingt PyTorch mitgeladen hätte, obwohl
+hier nie genutzt. Kein optionales Extra mehr nötig, unsichtbares Wasserzeichen ist immer
+verfügbar.
 
 Library-Ebene: `us_mediakit.watermark.invisible.embed`.
 

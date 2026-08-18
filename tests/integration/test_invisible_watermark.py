@@ -1,21 +1,16 @@
-"""Testet das unsichtbare Wasserzeichen (Embedding + Erkennung) gegen die reale
-`invisible-watermark`-Bibliothek. Alle Robustheits-Zahlen hier sind selbst gemessen
-(siehe `us_mediakit/watermark/invisible.py`), nicht aus der Bibliotheks-Doku übernommen.
+"""Testet das unsichtbare Wasserzeichen (Embedding + Erkennung) gegen den echten
+DWT-DCT-SVD-Algorithmus (`_dwt_dct_svd.py`). Alle Robustheits-Zahlen hier sind selbst
+gemessen (siehe `us_mediakit/watermark/invisible.py`), nicht aus einer Bibliotheks-Doku
+übernommen.
 """
 
 from __future__ import annotations
 
-import importlib.util
 import io
 from pathlib import Path
 
 import pytest
 from PIL import Image
-
-pytestmark = pytest.mark.skipif(
-    importlib.util.find_spec("imwatermark") is None,
-    reason="invisible-watermark nicht installiert ([watermark]-Extra)",
-)
 
 from us_mediakit.watermark.detect import detect
 from us_mediakit.watermark.invisible import WatermarkError, embed

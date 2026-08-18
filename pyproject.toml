@@ -27,6 +27,13 @@ dependencies = [
     "Pillow>=10.0",
     "pillow-heif>=0.15",
     "c2pa-python>=0.5",
+    # Für das unsichtbare Wasserzeichen (DWT-DCT-SVD, siehe watermark/_dwt_dct_svd.py) --
+    # bewusst Kern-Abhängigkeiten statt eines optionalen Extras: der Algorithmus selbst
+    # ist reine Bildverarbeitung ohne ML-Modell, im Gegensatz zur früher genutzten
+    # invisible-watermark-Bibliothek, die dafür unbedingt PyTorch mitgezogen hätte.
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "PyWavelets>=1.4",
 ]
 
 [project.optional-dependencies]
@@ -41,7 +48,6 @@ server = [
 mysql = ["pymysql>=1.1"]
 postgres = ["psycopg>=3.1"]
 fast = ["pyvips>=2.2"]
-watermark = ["invisible-watermark>=0.2"]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",

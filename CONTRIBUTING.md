@@ -7,7 +7,7 @@ Danke für dein Interesse an us-mediakit.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[server,dev,fast,watermark]"
+pip install -e ".[server,dev,fast]"
 pip install "cuttlefish @ git+https://github.com/urbanstudioGmbH/cuttlefish.git"
 ```
 
