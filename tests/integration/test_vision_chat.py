@@ -5,6 +5,7 @@ keine Mocks auf HTTP-Ebene, sondern ein echter Server, echte Requests.
 
 from __future__ import annotations
 
+import shutil
 import socket
 import subprocess
 import time
@@ -13,6 +14,11 @@ import pytest
 
 from us_mediakit.providers.base import ProviderError, ProviderUnavailableError
 from us_mediakit.providers.vision_chat import OpenAICompatibleVisionProvider
+
+pytestmark = pytest.mark.skipif(
+    shutil.which("cuttlefish") is None,
+    reason="cuttlefish nicht installiert (verlangt Python >= 3.12, siehe CONTRIBUTING.md)",
+)
 
 
 def _free_port() -> int:
