@@ -1,31 +1,18 @@
-"""Zuschnitt/Skalierung — Portierung der Fit-Modi aus SimpleImageLibrary3 (PHP).
+"""Zuschnitt/Skalierung — die vier Fit-Modi `crop`/`greedycrop`/`greedyscalecrop`/`full`.
 
-Referenz ist der **Imagick-Pfad** von SimpleImageLibrary3 (`thumbnailFromStringImagick`),
-nicht der GD-Fallback-Pfad: Die PHP-Klasse nutzt Imagick, wenn die Extension geladen ist
-(`if(extension_loaded('imagick')) return thumbnailFromStringImagick(...)`), und das ist auf
-dem Produktivserver der Fall. GD-spezifische Eigenheiten (z. B. eine EXIF-Rotationskorrektur
-nur im Imagick-Pfad, ein anderes Schärfen-Verhalten im GD-Pfad) werden hier bewusst nicht
-repliziert, weil sie im tatsächlich aktiven Pfad nicht auftreten.
+Zwei bewusste Designentscheidungen, keine Bugs:
 
-Bekannte, absichtlich übernommene Eigenheiten aus dem Original (nicht "Bugs", die hier zu
-fixen wären — Ziel ist Bildparität mit dem heutigen Ausgabeverhalten):
-
-- `greedycrop` skaliert Breite/Höhe mit vertauschten Faktoren (siehe `_greedycrop`,
-  identisch zur PHP-Formel) — das verzerrt das Seitenverhältnis beim Zwischenschritt
-  absichtlich, um in jedem Fall beide Zielmaße zu erreichen, bevor zugeschnitten wird.
+- `greedycrop` skaliert Breite/Höhe mit vertauschten Faktoren (siehe `_greedycrop`) —
+  das verzerrt das Seitenverhältnis beim Zwischenschritt absichtlich, um in jedem Fall
+  beide Zielmaße zu erreichen, bevor zugeschnitten wird.
 - Bei `greedyscalecrop`/`full` wird **nicht** vergrößert, wenn kein `ai`-Provider gesetzt
   ist und die Zielbreite größer als die Zwischenbreite ist (`scale > 1`) — das Bild bleibt
-  dann kleiner als die Zielgröße. Das ist bestehendes Verhalten, keine neue Einschränkung.
+  dann kleiner als die Zielgröße, außer `max_upscale_factor` erlaubt eine gedeckelte
+  einfache Vergrößerung (siehe `apply_fit`).
 
-Eine Abweichung ist bewusst **nicht** übernommen: Die Imagick-Fassung parst einen
-übergebenen `aspect_ratio`-String ohne Bindestrich nicht robust (Division durch einen
-undefinierten Index). Hier wird stattdessen die robustere Fallback-Logik aus dem
-GD-Pfad verwendet (einzelner numerischer Wert erlaubt) — ein Crash bei einer
-Formatabweichung wäre kein sinnvoller Paritätsanspruch.
-
-PHPs `round()` rundet Halbwerte von Null weg (0.5 → 1, -0.5 → -1), Pythons `round()`
-rundet kaufmännisch zum geraden Wert — deshalb `php_round()` als eigene Funktion, damit
-Rundungsergebnisse an Preset-Grenzen exakt übereinstimmen.
+`php_round()`: Halbwerte werden von Null weg gerundet (0.5 → 1, -0.5 → -1), nicht
+kaufmännisch zum geraden Wert wie Pythons eingebautes `round()` — nötig, damit
+Rundungsergebnisse an Preset-Grenzen konsistent und reproduzierbar bleiben.
 """
 
 from __future__ import annotations
@@ -197,8 +184,8 @@ def apply_fit(
 ) -> FitResult:
     """Wendet einen Fit-Modus an. `mode` ist ein Preset aus imageformats.json.
 
-    EXIF-Ausrichtung wird vor jeder Berechnung korrigiert (Gegenstück zu
-    Imagick::autoOrient() im Original).
+    EXIF-Ausrichtung wird vor jeder Berechnung korrigiert, damit hochkant fotografierte,
+    aber mit Rotationsflag gespeicherte Bilder nicht falsch zugeschnitten werden.
 
     `max_upscale_factor`: explizites Opt-in für einfache (bikubische/Lanczos)
     Vergrößerung ohne KI-Provider, standardmäßig weiterhin `None` (= keine

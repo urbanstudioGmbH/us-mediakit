@@ -162,12 +162,11 @@ def test_thumbnail_alignx_aligny_change_which_region_is_kept(client, raw_api_key
         assert b.getpixel((94, 94))[:3] == (90, 150, 100)
 
 
-def test_thumbnail_alignx_aligny_accept_numeric_values_like_php_original(client, raw_api_key):
-    """Wie im PHP-Original (SimpleImageLibrary3): alignx/aligny akzeptieren sowohl die
-    Schluesselwoerter (left/right/top/bottom) als auch numerische Prozentwerte 0-100 --
-    numerisch 0/100 muss sich identisch zu left/right bzw. top/bottom verhalten, und
-    Zwischenwerte erlauben eine Positionierung, die die Schluesselwoerter allein nicht
-    koennen."""
+def test_thumbnail_alignx_aligny_accept_numeric_values(client, raw_api_key):
+    """alignx/aligny akzeptieren sowohl die Schluesselwoerter (left/right/top/bottom) als
+    auch numerische Prozentwerte 0-100 -- numerisch 0/100 muss sich identisch zu
+    left/right bzw. top/bottom verhalten, und Zwischenwerte erlauben eine Positionierung,
+    die die Schluesselwoerter allein nicht koennen."""
     source = _quadrant_png_b64()
 
     numeric_top_left = client.post(

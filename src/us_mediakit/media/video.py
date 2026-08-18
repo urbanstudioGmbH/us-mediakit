@@ -1,8 +1,7 @@
 """Video-Frame-Extraktion via ffmpeg, Dauer-Check via ffprobe.
 
-Portierung des Video-Zweigs aus SimpleImageLibrary3::thumbnailFromString, aber mit
-`tempfile`-Context-Managern statt manuellem tempnam()/unlink() — Aufräumen ist damit
-auch bei einer Exception garantiert.
+Nutzt `tempfile`-Context-Manager statt manueller Temp-Datei-Verwaltung — Aufräumen ist
+damit auch bei einer Exception garantiert.
 """
 
 from __future__ import annotations

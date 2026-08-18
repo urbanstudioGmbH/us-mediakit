@@ -1,8 +1,8 @@
 """SVG-Sanitizing vor Passthrough.
 
-SVG wird nie neu gerastert, sondern (wie im PHP-Original) unverändert an den Client
-durchgereicht — das eigentliche Sicherheitsrisiko ist daher nicht die Bildverarbeitung,
-sondern eingebettetes JavaScript/externe Referenzen im SVG selbst (XSS/SSRF).
+SVG wird nie neu gerastert, sondern unverändert an den Client durchgereicht — das
+eigentliche Sicherheitsrisiko ist daher nicht die Bildverarbeitung, sondern eingebettetes
+JavaScript/externe Referenzen im SVG selbst (XSS/SSRF).
 
 Bewusst ohne zusätzliche Abhängigkeit (kein `defusedxml`): Ein `<!DOCTYPE`-Präfix wird
 grundsätzlich entfernt, bevor mit der Standardbibliothek geparst wird — legitimes SVG

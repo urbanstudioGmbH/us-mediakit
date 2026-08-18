@@ -15,8 +15,8 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
   einen benannten Eintrag in `imageformats.json` anzulegen.
 - `thumbnail`: `--align-x`/`--align-y` (`alignx`/`aligny`) jetzt auch über CLI und
   Netzwerk-Dienst steuerbar, nicht mehr nur als fest im Preset hinterlegter Wert —
-  akzeptieren wie im PHP-Original sowohl Schlüsselwörter (`left`/`center`/`right`,
-  `top`/`center`/`bottom`) als auch numerische Prozentwerte 0–100.
+  akzeptieren sowohl Schlüsselwörter (`left`/`center`/`right`, `top`/`center`/`bottom`)
+  als auch numerische Prozentwerte 0–100.
 - `thumbnail`: `--max-upscale-factor`/`max_upscale_factor` als explizites Opt-in für
   einfache (bikubische) Vergrößerung ohne KI-Provider, bis zu einem angegebenen Faktor.
   Ohne Angabe unverändertes bisheriges Verhalten (keine Vergrößerung).

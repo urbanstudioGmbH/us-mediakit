@@ -81,6 +81,12 @@ docker compose up -d --build
 Details, eigene Datenbank statt SQLite und Hinweise zum Testen auf einem Server mit
 Plesk in [`docs/docker.md`](docs/docker.md).
 
+## Herkunft
+
+Die Bildverarbeitung (Zuschnitt, Skalierung, Formaterkennung, Video-/PDF-Extraktion) baut
+auf `SimpleImageLibrary3` auf, einer PHP-Bibliothek, die urbanstudio GmbH seit 2002 für die
+eigene Plattform entwickelt und im Einsatz hat.
+
 ## Lizenz
 
 Apache License 2.0, siehe [LICENSE](LICENSE).

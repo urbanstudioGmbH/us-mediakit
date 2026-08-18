@@ -1,7 +1,4 @@
-"""PDF-Seiten-Rendering via pdftoppm (poppler-utils).
-
-Portierung des PDF-Zweigs aus SimpleImageLibrary3::thumbnailFromString.
-"""
+"""PDF-Seiten-Rendering via pdftoppm (poppler-utils)."""
 
 from __future__ import annotations
 
@@ -36,9 +33,9 @@ def render_page(
                 "-l",
                 str(page),
                 "-jpeg",
-                "-r",  # PHP-Original nutzt "-dpi" — ein Alias, den aktuelle poppler-utils-
-                # Versionen nicht mehr kennen (getestet mit 26.08.0). "-r" ist der seit
-                # Langem stabile, dokumentierte Parameter für die Auflösung.
+                "-r",  # dokumentierter, stabiler Parameter für die Auflösung ("-dpi" ist ein
+                # veralteter Alias, den aktuelle poppler-utils-Versionen nicht mehr kennen,
+                # getestet mit 26.08.0).
                 str(dpi),
                 "-jpegopt",
                 f"quality={jpeg_quality}",

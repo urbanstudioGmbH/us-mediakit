@@ -1,9 +1,7 @@
 # Fit-Modi
 
-us-mediakit unterstützt vier Zuschnitt-/Skalierungsmodi, portiert aus der bisherigen
-PHP-Bildbibliothek (`SimpleImageLibrary3`), damit bestehende Presets (`imageformats.json`)
-unverändert weiterverwendet werden können. Alle Beispiele unten nutzen dieses
-800×400-Testbild:
+us-mediakit unterstützt vier Zuschnitt-/Skalierungsmodi. Alle Beispiele unten nutzen
+dieses 800×400-Testbild:
 
 ![Ausgangsbild](images/source.png)
 
@@ -27,9 +25,8 @@ Bildrand hinausgeht. Gleiches Preset wie oben, nur `"fit": "greedycrop"`:
 
 ![greedycrop](images/greedycrop.png)
 
-Das ist bestehendes Verhalten aus der PHP-Bibliothek, keine neue Entscheidung — die leichte
-Verzerrung im Zwischenschritt ist ein bekannter Kompromiss zugunsten von Einfachheit/Robustheit,
-kein Fehler, der hier zu beheben wäre.
+Die leichte Verzerrung im Zwischenschritt ist ein bewusster Kompromiss zugunsten von
+Einfachheit/Robustheit, kein Fehler.
 
 ## `greedyscalecrop` / `full`
 
@@ -72,9 +69,9 @@ Ziel unterschiedliche Seitenverhältnisse haben. Beispiel mit `{"w": 200, "h": 2
 |---|---|
 | ![links oben](images/full-align-left-top.png) | ![rechts unten](images/full-align-right-bottom.png) |
 
-Wie im PHP-Original (`SimpleImageLibrary3`) sind beide Schreibweisen gleichwertig nutzbar:
-die Schlüsselwörter für die vier Standardfälle, oder ein numerischer Prozentwert (0–100)
-für eine Positionierung, die die Schlüsselwörter allein nicht ausdrücken können (z. B.
+Beide Schreibweisen sind gleichwertig nutzbar: die Schlüsselwörter für die vier
+Standardfälle, oder ein numerischer Prozentwert (0–100) für eine Positionierung, die
+die Schlüsselwörter allein nicht ausdrücken können (z. B.
 `alignx: 75` — knapp rechts der Mitte, nicht ganz am rechten Rand). Über CLI und
 Netzwerk-Dienst nicht mehr nur als fest im Preset hinterlegter Wert, sondern auch direkt
 pro Aufruf überschreibbar (überschreibt den Preset-Wert nur für diesen einen Aufruf):
@@ -105,15 +102,12 @@ immer `greedyscalecrop`, auch wenn das Preset einen anderen Fit-Modus konfigurie
 
 ## EXIF-Ausrichtung
 
-Vor jeder Transformation wird die EXIF-`Orientation` korrigiert (Pillows `ImageOps.exif_transpose`)
-— das Gegenstück zu `Imagick::autoOrient()` im PHP-Original. Ohne diese Korrektur würden
-hochkant fotografierte, aber mit Rotationsflag gespeicherte Bilder falsch zugeschnitten.
+Vor jeder Transformation wird die EXIF-`Orientation` korrigiert (Pillows `ImageOps.exif_transpose`).
+Ohne diese Korrektur würden hochkant fotografierte, aber mit Rotationsflag gespeicherte
+Bilder falsch zugeschnitten.
 
-## Bekannte Abweichung zum PHP-Original
+## Schärfen beim Verkleinern
 
-Die PHP-Klasse hat zwei unterschiedliche Implementierungen (GD-Fallback und Imagick), die sich
-in Details unterscheiden (u. a. EXIF-Korrektur nur im Imagick-Pfad, unterschiedliches
-Schärfen-Verhalten). us-mediakit portiert **den Imagick-Pfad**, weil der auf dem Produktivserver
-tatsächlich aktiv ist. Das Schärfen selbst ist eine Näherung an `ImageMagick::unsharpMaskImage`
-(andere Parametrisierung als Pillows `UnsharpMask`) — bei Pixel-Vergleichstests gegen die
-bisherige PHP-Ausgabe ist dafür ein Toleranzband einzuplanen, keine bitgenaue Übereinstimmung.
+Nach einer verkleinernden Skalierung (`scale < 1`) wird das Ergebnis leicht nachgeschärft
+(Pillows `UnsharpMask`), um den beim Verkleinern typischen Weichzeichnungseffekt
+auszugleichen.

@@ -3,3 +3,7 @@ Copyright 2026 urbanstudio GmbH
 
 This product is licensed under the Apache License, Version 2.0.
 See the LICENSE file for the full license text.
+
+The image processing (cropping, scaling, format detection, video/PDF extraction)
+builds on SimpleImageLibrary3, a PHP library developed and used in production by
+urbanstudio GmbH since 2002.

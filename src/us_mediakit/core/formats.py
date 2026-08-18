@@ -1,8 +1,4 @@
-"""Magic-byte-basierte Bildformaterkennung.
-
-Portierung der Signaturtabelle aus SimpleImageLibrary3::getImageTypeFromString
-(PHP), erweitert um HEIC/AVIF (ISO-BMFF "ftyp"-Box), die im PHP-Original fehlten.
-"""
+"""Magic-byte-basierte Bildformaterkennung, inklusive HEIC/AVIF (ISO-BMFF "ftyp"-Box)."""
 
 from __future__ import annotations
 
@@ -21,10 +17,9 @@ CONTENT_TYPES: dict[str, str] = {
     "heif": "image/heif",
 }
 
-# Einfache Präfix-Signaturen (Byte-Folge am Dateianfang), Reihenfolge wie im
-# PHP-Original erhalten, damit bei mehrdeutigen Präfixen dasselbe Ergebnis
-# entsteht (z. B. würde "webp" ohne die RIFF-Prüfung fälschlich vor anderen
-# RIFF-Containern greifen — hier unverändert wie im Original übernommen).
+# Einfache Präfix-Signaturen (Byte-Folge am Dateianfang). Reihenfolge ist bewusst so
+# gewählt, dass bei mehrdeutigen Präfixen ein eindeutiges Ergebnis entsteht (z. B. würde
+# "webp" ohne vorherige RIFF-Prüfung fälschlich vor anderen RIFF-Containern greifen).
 _PREFIX_MAGICS: dict[str, tuple[bytes, ...]] = {
     "png": (bytes.fromhex("89504E470D0A1A0A"),),
     "jpg": (bytes.fromhex("FFD8FF"),),
@@ -62,10 +57,9 @@ def get_image_type_from_bytes(data: bytes) -> str | None:
             if data.startswith(magic):
                 return image_type
 
-    # Erweiterung gegenüber SimpleImageLibrary3: dessen Signaturliste erkennt nur SVG
-    # mit vorangestelltem "<!DOCTYPE"/XML-Prolog — ein SVG ganz ohne Prolog (in der Praxis
-    # der Normalfall bei exportierten SVGs) fiel dort durch und würde als Rasterbild
-    # fehlinterpretiert. Hier zusätzlich: ein "<svg" innerhalb der ersten 256 Bytes.
+    # Ein SVG ganz ohne "<!DOCTYPE"/XML-Prolog (in der Praxis der Normalfall bei
+    # exportierten SVGs) würde ohne diese Prüfung als Rasterbild fehlinterpretiert.
+    # Deshalb zusätzlich: ein "<svg" innerhalb der ersten 256 Bytes.
     head = data[:256].lstrip()
     if head.startswith(b"<svg") or (head.startswith(b"<?xml") and b"<svg" in head):
         return "svg"
