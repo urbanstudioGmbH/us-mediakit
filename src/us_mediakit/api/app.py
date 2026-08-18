@@ -4,6 +4,7 @@ eigene Datenbank-/Konfigurationszustände isolieren können."""
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 
 import us_mediakit
 from us_mediakit.api.admin import api_keys as admin_api_keys
@@ -37,6 +38,10 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(admin_api_keys.router)
     app.include_router(admin_usage.router)
+
+    @app.get("/", include_in_schema=False)
+    def root() -> RedirectResponse:
+        return RedirectResponse(url="/docs")
 
     return app
 
