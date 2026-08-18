@@ -16,7 +16,10 @@ Zwei Bausteine sind für uns-mediakit relevant:
   jeweils mit einem Pflichtfeld `digitalSourceType` aus der [IPTC-Vokabularliste](http://cv.iptc.org/newscodes/digitalsourcetype/)
   (z. B. `digitalCapture`, `trainedAlgorithmicMedia`, `algorithmicallyEnhanced`,
   `compositeSynthetic`). us_mediakit.c2pa.vocabulary löst Kurznamen automatisch auf die
-  volle IPTC-URL auf.
+  volle IPTC-URL auf. **Bei einem Ingredient ist die erste Action zwingend
+  `c2pa.opened`** (sonst bewertet jeder Reader das Manifest als ungültig) — wird bei
+  jeder Ableitung automatisch vorangestellt, mit dem korrekten Verweis auf das
+  Ingredient; die eigentliche Operation (`c2pa.resized` etc.) folgt als zweite Action.
 - **Ingredients** — Verweise auf andere Assets, aus denen das aktuelle erzeugt wurde,
   mit einer `relationship` (bei uns ausschließlich `parentOf`: "dieses Ingredient ist der
   Vorgänger des aktuellen Assets").

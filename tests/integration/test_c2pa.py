@@ -135,9 +135,49 @@ def test_sign_never_mutates_an_existing_manifest_new_derivative_gets_own_manifes
 
     assert original_manifest["assertions"][0]["data"]["actions"][0]["action"] == "c2pa.created"
     assert derivative_manifest["ingredients"][0]["relationship"] == "parentOf"
-    assert derivative_manifest["assertions"][0]["data"]["actions"][0]["action"] == "c2pa.resized"
+    derivative_actions = derivative_manifest["assertions"][0]["data"]["actions"]
+    # Pflicht bei einem Ingredient: die erste Action muss c2pa.opened sein (vom Builder
+    # selbst eingefügt, inkl. korrektem parameters.ingredients-Verweis) — unsere eigene
+    # Action kommt danach. Ohne das validiert der Reader das Manifest als "Invalid"
+    # (assertion.action.malformed), siehe test_derivative_manifest_validates_as_valid.
+    assert derivative_actions[0]["action"] == "c2pa.opened"
+    assert derivative_actions[-1]["action"] == "c2pa.resized"
     # Das Original-Manifest ist unverändert erhalten (eigenes Label, eigene Signatur).
     assert original_manifest["label"] != derivative_manifest["label"]
+
+
+def test_derivative_manifest_validates_as_valid(signer_config):
+    """Regressionstest für einen realen Bug: eine Ableitung mit Ingredient wurde vom
+    Reader als "Invalid" bewertet (assertion.action.malformed bzw. bei einem
+    Zwischenstand assertion.action.ingredientMismatch), weil die erste Action nicht
+    c2pa.opened war. Die anderen Tests hier prüfen nur die Manifest-Struktur über
+    `read_manifest`, nicht die tatsächliche Validität über `verify` — genau das hat den
+    Bug durchrutschen lassen."""
+    original_signed = sign(
+        SignRequest(
+            data=_jpeg_bytes(400, 300),
+            mime_type="image/jpeg",
+            signer_config=signer_config,
+            digital_source_type="digitalCapture",
+        )
+    )
+    derivative_signed = sign(
+        SignRequest(
+            data=_jpeg_bytes(100, 100),
+            mime_type="image/jpeg",
+            signer_config=signer_config,
+            digital_source_type="digitalCapture",
+            action="c2pa.resized",
+            ingredient=IngredientRef(data=original_signed, mime_type="image/jpeg"),
+        )
+    )
+
+    result = verify(derivative_signed, "image/jpeg")
+
+    assert result.validation_state == "Valid"
+    failures = result.validation_results["activeManifest"]["failure"]
+    codes = {f["code"] for f in failures}
+    assert codes <= {"signingCredential.untrusted"}
 
 
 # --- Propagations-Entscheidung ---
@@ -167,7 +207,9 @@ def test_propagate_chains_ingredient_when_source_has_manifest(signer_config):
     assert manifest is not None
     assert manifest["ingredients"][0]["relationship"] == "parentOf"
     # digital_source_type wurde aus dem Quell-Manifest übernommen, nicht neu erfunden.
-    assert manifest["assertions"][0]["data"]["actions"][0]["digitalSourceType"].endswith(
+    # actions[0] ist die vom Builder eingefügte c2pa.opened-Action (Pflicht bei einem
+    # Ingredient), unsere eigene Action mit dem digitalSourceType kommt danach.
+    assert manifest["assertions"][0]["data"]["actions"][-1]["digitalSourceType"].endswith(
         "digitalCapture"
     )
 
@@ -268,10 +310,13 @@ def test_pipeline_propagates_manifest_end_to_end(signer_config):
     manifest = read_manifest(result.data, "image/jpeg")
     assert manifest is not None
     assert manifest["ingredients"][0]["relationship"] == "parentOf"
-    assert manifest["assertions"][0]["data"]["actions"][0]["action"] == "c2pa.resized"
-    assert manifest["assertions"][0]["data"]["actions"][0]["digitalSourceType"].endswith(
-        "trainedAlgorithmicMedia"
-    )
+    actions = manifest["assertions"][0]["data"]["actions"]
+    assert actions[0]["action"] == "c2pa.opened"
+    assert actions[-1]["action"] == "c2pa.resized"
+    assert actions[-1]["digitalSourceType"].endswith("trainedAlgorithmicMedia")
+
+    verify_result = verify(result.data, "image/jpeg")
+    assert verify_result.validation_state == "Valid"
 
 
 def test_pipeline_without_signer_config_behaves_like_before(signer_config=None):

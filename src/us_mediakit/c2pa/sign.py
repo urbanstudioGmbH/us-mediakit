@@ -88,6 +88,13 @@ def sign(request: SignRequest) -> bytes:
 
     builder = c2pa.Builder(manifest)
     if request.ingredient is not None:
+        # Pflicht bei einem Ingredient: der Builder muss wissen, dass dies eine
+        # Bearbeitung eines bestehenden Assets ist (nicht nur unsere eigene
+        # "resized"/"cropped"-Action) — sonst verlangt der Validator zusätzlich eine
+        # eigene "c2pa.opened"-Action mit einem `parameters.ingredients`-Verweis, den wir
+        # ohne set_intent nicht korrekt befüllen können ("assertion.action.malformed"
+        # bzw. "assertion.action.ingredientMismatch", beides real reproduziert).
+        builder.set_intent(c2pa.C2paBuilderIntent.EDIT)
         ingredient_json = {
             "title": request.ingredient.title,
             "relationship": request.ingredient.relationship,
