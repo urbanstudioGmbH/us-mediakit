@@ -59,7 +59,8 @@ FastAPI generiert die OpenAPI-Dokumentation automatisch aus den Endpunkt-Definit
 kein separater Schritt nötig. Sobald der Dienst läuft:
 
 - `GET /docs` — interaktive Swagger-UI, Endpunkte direkt im Browser mit einem echten
-  API-Key ausprobierbar ("Authorize"-Button oben rechts, `Bearer <key>`).
+  API-Key ausprobierbar: oben rechts auf "Authorize", dort **nur den reinen Key**
+  eintragen (ohne `Bearer `-Präfix — das ergänzt Swagger selbst beim Absenden).
 - `GET /redoc` — ReDoc, eher zum Lesen/Nachschlagen als zum interaktiven Testen.
 - `GET /openapi.json` — das rohe OpenAPI-3.1-Schema, z. B. für Client-Codegenerierung.
 
