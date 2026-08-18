@@ -125,7 +125,15 @@ def is_write_format_available(save_format: str) -> bool:
     """Prüft, ob Pillow (inkl. registrierter Plugins wie pillow-heif) das jeweilige
     Format tatsächlich schreiben kann. AVIF hängt davon ab, ob die installierte
     Pillow-Wheel mit libavif gebaut wurde — nicht bei jedem Build/jeder Plattform
-    garantiert, deshalb hier zur Laufzeit geprüft statt vorausgesetzt."""
+    garantiert, deshalb hier zur Laufzeit geprüft statt vorausgesetzt.
+
+    `Image.init()` ist hier Pflicht, kein Optimierungsdetail: Pillow registriert
+    Format-Plugins (auch weit verbreitete wie WEBP) erst lazy bei erstem Gebrauch —
+    `Image.SAVE` ist in einem frischen Prozess ohne vorherigen `Image.init()`-Aufruf
+    schlicht leer, auch wenn das Format tatsächlich verfügbar wäre (in-process
+    reproduziert durch `python -c "from PIL import Image; print(Image.SAVE)"` direkt
+    nach dem Import: leeres Dict)."""
     if save_format == "AVIF":
         return bool(features.check("avif"))
+    Image.init()
     return save_format in Image.SAVE

@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 from us_mediakit.core import formats
 
 
@@ -55,6 +58,27 @@ def test_is_write_format_available_for_always_supported_formats():
 
 def test_is_write_format_available_for_unknown_format():
     assert formats.is_write_format_available("NOT-A-REAL-FORMAT") is False
+
+
+def test_is_write_format_available_webp_in_a_fresh_interpreter():
+    """Regressionstest: `Image.SAVE` ist in einem komplett frischen Prozess leer, bis
+    `Image.init()` läuft (Pillow registriert Format-Plugins lazy) — ein In-Prozess-Test
+    im laufenden pytest-Prozess kann das nicht zuverlässig prüfen, weil vorherige Tests
+    Pillow bereits "aufgewärmt" haben. Reproduziert den echten Bug: `thumbnail --format
+    webp` schlug in einem frisch gestarteten CLI-Aufruf fehl, obwohl WEBP-Unterstützung
+    installiert ist."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from us_mediakit.core import formats; print(formats.is_write_format_available('WEBP'))",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.stdout.strip() == "True", result.stderr
 
 
 def test_is_write_format_available_heif_after_pillow_heif_registration():
