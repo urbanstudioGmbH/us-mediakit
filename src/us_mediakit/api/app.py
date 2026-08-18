@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+import us_mediakit
 from us_mediakit.api.admin import api_keys as admin_api_keys
 from us_mediakit.api.admin import usage as admin_usage
 from us_mediakit.api.v1 import (
@@ -20,7 +21,11 @@ from us_mediakit.api.v1 import (
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="us-mediakit", description="Bild-Metadaten, C2PA und KI-Bildverarbeitung")
+    app = FastAPI(
+        title="us-mediakit",
+        description="Bild-Metadaten, C2PA und KI-Bildverarbeitung",
+        version=us_mediakit.__version__,
+    )
 
     app.include_router(thumbnail.router)
     app.include_router(animated_webp.router)
