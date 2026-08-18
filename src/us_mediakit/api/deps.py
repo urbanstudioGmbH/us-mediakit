@@ -14,12 +14,21 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from us_mediakit.db.engine import create_db_engine, create_session_factory
 from us_mediakit.db.models import ApiKey
+
+# `auto_error=False`: wir werfen die 401 selbst mit eigener deutscher Fehlermeldung,
+# statt FastAPIs generische englische Standardmeldung zu übernehmen. Zentraler Nutzen
+# dieses Security-Schemas gegenüber einem rohen Header()-Parameter: FastAPI trägt es als
+# echtes `securitySchemes`-Objekt ins OpenAPI-Schema ein, wodurch Swagger UI erst den
+# globalen "Authorize"-Button anzeigt (ohne das gibt es dort keinen Login-Dialog, der
+# Authorization-Header wäre nur ein verstecktes Parameterfeld pro Endpunkt gewesen).
+_bearer_scheme = HTTPBearer(auto_error=False)
 
 _KEY_PREFIX = "usmk_"
 _KEY_RANDOM_HEX_LENGTH = 32
@@ -65,13 +74,13 @@ def get_session() -> Generator[Session, None, None]:
 
 
 def require_api_key(
-    authorization: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
     session: Session = Depends(get_session),
 ) -> ApiKey:
-    if not authorization or not authorization.startswith("Bearer "):
+    if credentials is None or not credentials.credentials.strip():
         raise HTTPException(status_code=401, detail="Fehlender oder ungültiger Authorization-Header")
 
-    raw_key = authorization.removeprefix("Bearer ").strip()
+    raw_key = credentials.credentials.strip()
     key_hash = hash_key(raw_key)
 
     api_key = session.execute(select(ApiKey).where(ApiKey.key_hash == key_hash)).scalar_one_or_none()
@@ -127,14 +136,16 @@ def _load_admin_token() -> str | None:
     return os.environ.get("USMEDIAKIT_ADMIN_TOKEN")
 
 
-def require_admin_token(authorization: str | None = Header(default=None)) -> None:
+def require_admin_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+) -> None:
     expected = _load_admin_token()
     if not expected:
         raise HTTPException(status_code=503, detail="Kein Admin-Token konfiguriert")
 
-    if not authorization or not authorization.startswith("Bearer "):
+    if credentials is None or not credentials.credentials.strip():
         raise HTTPException(status_code=401, detail="Fehlender oder ungültiger Authorization-Header")
 
-    provided = authorization.removeprefix("Bearer ").strip()
+    provided = credentials.credentials.strip()
     if not secrets.compare_digest(provided, expected):
         raise HTTPException(status_code=403, detail="Ungültiges Admin-Token")

@@ -19,6 +19,9 @@ env/
 .coverage
 htmlcov/
 
+# Lokale Laufzeitdaten (z. B. Default-SQLite-DB ohne gesetztes USMEDIAKIT_DB)
+*.db
+
 # Type checking / linting caches
 .mypy_cache/
 .ruff_cache/
