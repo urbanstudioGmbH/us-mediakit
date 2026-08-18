@@ -68,8 +68,18 @@ OpenAPI-3.1-Schema unter `/openapi.json`.
 
 Vollständige Endpunkt-Referenz in [`docs/api-reference.md`](docs/api-reference.md),
 Produktivbetrieb (systemd, nginx, Hardening) in [`docs/operations.md`](docs/operations.md),
+Docker-Betrieb (inkl. Hinweisen für Server mit Plesk) in [`docs/docker.md`](docs/docker.md),
 KI-Provider konfigurieren in [`docs/providers.md`](docs/providers.md), C2PA-Zertifikat für
 den Produktivbetrieb beantragen in [`docs/c2pa-conformance.md`](docs/c2pa-conformance.md).
+
+### Docker
+
+```bash
+docker compose up -d --build
+```
+
+Details, eigene Datenbank statt SQLite und Hinweise zum Testen auf einem Server mit
+Plesk in [`docs/docker.md`](docs/docker.md).
 
 ## Lizenz
 

@@ -1,0 +1,22 @@
+# Für lokales Ausprobieren/Testen gedacht (z. B. via Plesk-Docker-Extension, siehe
+# docs/docker.md), nicht als vollständige Produktiv-Referenz -- dafür weiterhin
+# docs/operations.md (systemd + nginx + Hardening).
+services:
+  us-mediakit:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Nur für schnelles Ausprobieren im Klartext gesetzt -- für alles darüber hinaus
+      # stattdessen USMEDIAKIT_ADMIN_TOKEN_FILE auf ein gemountetes Secret zeigen lassen.
+      USMEDIAKIT_ADMIN_TOKEN: change-me
+    volumes:
+      - us-mediakit-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  us-mediakit-data:
