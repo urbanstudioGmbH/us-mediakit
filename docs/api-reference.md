@@ -36,6 +36,14 @@ us-mediakit thumbnail photo.jpg --mode showcase_medium --output-format avif -o t
   us-mediakit auflöst — bei Unsicherheit lieber AVIF (lizenzfrei, vergleichbare
   Kompressionseffizienz) als Zielformat wählen.
 
+  **Fallstrick bei eigenständiger Weiterverarbeitung:** Die Registrierung passiert beim
+  Import von `us_mediakit` (bzw. eines beliebigen Untermoduls — Python führt dabei immer
+  auch `us_mediakit/__init__.py` mit aus). Wird eine von us-mediakit erzeugte HEIC-Datei
+  in einem *eigenen* Skript weiterverarbeitet, das ausschließlich `from PIL import Image`
+  nutzt, ganz ohne jeden `us_mediakit`-Import, kennt Pillow das Format nicht und wirft
+  `UnidentifiedImageError`. Abhilfe: irgendetwas aus `us_mediakit` importieren (reicht
+  bereits als Nebeneffekt) oder `pillow_heif.register_heif_opener()` selbst aufrufen.
+
 ## Animierter WebP-Ausschnitt (`animated_webp`)
 
 Eigene Operation, keine Variante von `thumbnail` — schneidet einen Zeitbereich aus einem

@@ -16,6 +16,7 @@ from us_mediakit.c2pa.sign import SignerConfig, SignRequest
 from us_mediakit.c2pa.sign import sign as c2pa_sign
 from us_mediakit.c2pa.verify import verify as c2pa_verify
 from us_mediakit.core.pipeline import ThumbnailRequest, ThumbnailResult, generate_thumbnail
+from us_mediakit.media.video import DEFAULT_SEEK_SECONDS
 from us_mediakit.metadata.gps import strip_gps as strip_gps_tags
 from us_mediakit.metadata.read import read_metadata
 from us_mediakit.metadata.write import write_tags
@@ -59,6 +60,7 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
         aspect_ratio=args.aspect_ratio,
         zoom=args.zoom,
         is_video=args.video,
+        video_seek_seconds=args.video_seek_seconds,
         is_pdf=args.pdf,
         pdf_page=args.pdf_page,
         carry_metadata=args.carry_metadata,
@@ -282,7 +284,7 @@ def _cmd_watermark_invisible(args: argparse.Namespace) -> int:
     )
 
     try:
-        result = embed(data, reference_id)
+        result = embed(data, reference_id, output_format=args.format)
     except WatermarkError as exc:
         print(f"Fehler: {exc}", file=sys.stderr)
         return 1
@@ -352,6 +354,14 @@ def build_parser() -> argparse.ArgumentParser:
     thumbnail.add_argument("--aspect-ratio", dest="aspect_ratio")
     thumbnail.add_argument("--zoom")
     thumbnail.add_argument("--video", action="store_true")
+    thumbnail.add_argument(
+        "--video-seek-seconds",
+        dest="video_seek_seconds",
+        type=float,
+        default=DEFAULT_SEEK_SECONDS,
+        help=f"Zeitpunkt für die Frame-Extraktion bei --video, in Sekunden (Default {DEFAULT_SEEK_SECONDS}). "
+        "Wird automatisch auf die Videodauer geklemmt, wenn das Video kürzer ist.",
+    )
     thumbnail.add_argument("--pdf", action="store_true")
     thumbnail.add_argument("--pdf-page", type=int, default=1)
     thumbnail.add_argument("--dry-run", action="store_true")
@@ -442,6 +452,12 @@ def build_parser() -> argparse.ArgumentParser:
     watermark_invisible.add_argument("source")
     watermark_invisible.add_argument(
         "--reference-id", dest="reference_id", help="4 Byte hex; ohne Angabe wird eine erzeugt"
+    )
+    watermark_invisible.add_argument(
+        "--format",
+        default="JPEG",
+        help="Ausgabeformat, unabhängig von der Dateiendung des Quellpfads (Default JPEG). "
+        "Wichtig für Robustheitstests: JPEG kodiert beim Einbetten bereits verlustbehaftet.",
     )
     watermark_invisible.set_defaults(func=_cmd_watermark_invisible)
 

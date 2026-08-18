@@ -33,6 +33,9 @@ class ThumbnailApiRequest(OperationRequestBase):
     aspect_ratio: str | None = None
     zoom: str | float | None = None
     is_video: bool = False
+    video_seek_seconds: float | None = Field(
+        default=None, description="Zeitpunkt für die Frame-Extraktion bei is_video, in Sekunden. Ohne Angabe gilt der Bibliotheks-Default (siehe media.video.DEFAULT_SEEK_SECONDS)."
+    )
     is_pdf: bool = False
     pdf_page: int = 1
     carry_metadata: bool = True

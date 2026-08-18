@@ -15,6 +15,7 @@ from us_mediakit.billing.idempotency import ResponseCache
 from us_mediakit.billing.rate_limit import ConcurrencyLimitExceeded
 from us_mediakit.core.pipeline import ThumbnailRequest, generate_thumbnail
 from us_mediakit.db.models import ApiKey
+from us_mediakit.media.video import DEFAULT_SEEK_SECONDS
 
 router = APIRouter()
 
@@ -46,6 +47,9 @@ def post_thumbnail(
             aspect_ratio=body.aspect_ratio,
             zoom=body.zoom,
             is_video=body.is_video,
+            video_seek_seconds=(
+                body.video_seek_seconds if body.video_seek_seconds is not None else DEFAULT_SEEK_SECONDS
+            ),
             is_pdf=body.is_pdf,
             pdf_page=body.pdf_page,
             carry_metadata=body.carry_metadata,
