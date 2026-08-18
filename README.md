@@ -31,8 +31,9 @@ source .venv/bin/activate
 pip install -e ".[server,dev]"
 ```
 
-Systemabhängigkeiten (macOS via Homebrew, Debian via `apt`): `ffmpeg`, `poppler-utils`,
-`exiftool` (`libimage-exiftool-perl` unter Debian).
+Systemabhängigkeiten: `ffmpeg`, `poppler-utils`, `exiftool` — auf macOS via Homebrew
+(`brew install ffmpeg poppler exiftool`), für Debian/Ubuntu/Fedora/Arch siehe die
+Paketnamen-Tabelle in [`docs/operations.md`](docs/operations.md#systemabhängigkeiten).
 
 ### Library/CLI
 
@@ -53,6 +54,10 @@ die Fit-Modi sind in [`docs/fit-modes.md`](docs/fit-modes.md) mit Beispielbilder
 alembic upgrade head
 USMEDIAKIT_ADMIN_TOKEN=dev-token us-mediakit serve
 ```
+
+Läuft der Dienst, bringt er eine vollständige, automatisch generierte API-Dokumentation
+gleich mit: interaktives Swagger UI unter `/docs`, ReDoc unter `/redoc`, rohes
+OpenAPI-3.1-Schema unter `/openapi.json`.
 
 Vollständige Endpunkt-Referenz in [`docs/api-reference.md`](docs/api-reference.md),
 Produktivbetrieb (systemd, nginx, Hardening) in [`docs/operations.md`](docs/operations.md),

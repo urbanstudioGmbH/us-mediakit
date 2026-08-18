@@ -1,9 +1,22 @@
 # Betrieb
 
-## Systemabhängigkeiten (Debian)
+## Systemabhängigkeiten
+
+Benötigt werden `ffmpeg`, `poppler-utils` (liefert `pdftoppm`), `exiftool`, sowie für
+den in dieser Anleitung beschriebenen Aufbau `nginx` und `certbot`. Paketnamen
+unterscheiden sich je Distribution:
+
+| Distribution | Befehl |
+|---|---|
+| Debian / Ubuntu | `apt install python3-venv ffmpeg poppler-utils libimage-exiftool-perl nginx certbot python3-certbot-nginx` |
+| Fedora / RHEL / Rocky / AlmaLinux | `dnf install python3 poppler-utils perl-Image-ExifTool nginx certbot python3-certbot-nginx` — `ffmpeg` liegt nicht in den Standard-Repos, [RPM Fusion](https://rpmfusion.org/Configuration) aktivieren, dann `dnf install ffmpeg` |
+| Arch / Manjaro | `pacman -S python ffmpeg poppler perl-image-exiftool nginx certbot certbot-nginx` — `pdftoppm` kommt hier aus dem Paket `poppler`, nicht `poppler-utils` |
+
+Nach der Installation prüfen, ob alle drei CLI-Tools tatsächlich im `PATH` des Nutzers
+liegen, unter dem der systemd-Service läuft (siehe unten):
 
 ```bash
-apt install python3-venv ffmpeg poppler-utils libimage-exiftool-perl nginx certbot python3-certbot-nginx
+exiftool -ver && ffmpeg -version && pdftoppm -v
 ```
 
 ## Installation
@@ -39,6 +52,16 @@ chmod 600 /var/lib/us-mediakit/admin.token
 
 us-mediakit admin api-key create --account-ref "kunde-123" --label "Erster Test-Key"
 ```
+
+## API-Dokumentation (Swagger/ReDoc)
+
+FastAPI generiert die OpenAPI-Dokumentation automatisch aus den Endpunkt-Definitionen,
+kein separater Schritt nötig. Sobald der Dienst läuft:
+
+- `GET /docs` — interaktive Swagger-UI, Endpunkte direkt im Browser mit einem echten
+  API-Key ausprobierbar ("Authorize"-Button oben rechts, `Bearer <key>`).
+- `GET /redoc` — ReDoc, eher zum Lesen/Nachschlagen als zum interaktiven Testen.
+- `GET /openapi.json` — das rohe OpenAPI-3.1-Schema, z. B. für Client-Codegenerierung.
 
 ## systemd (Socket-Aktivierung)
 

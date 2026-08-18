@@ -18,7 +18,9 @@ laufen lassen) ist auf PyPI durch ein fremdes, unverwandtes Paket belegt — ein
 selbst verlangt Python 3.12+; unter 3.10/3.11 lässt sich dieser Schritt weglassen,
 `tests/integration/test_caption.py` überspringt die betroffenen Tests dann automatisch.
 
-Systemabhängigkeiten (macOS via Homebrew, Debian via `apt`): `exiftool`, `ffmpeg`, `poppler-utils`.
+Systemabhängigkeiten: `exiftool`, `ffmpeg`, `poppler-utils` — auf macOS via Homebrew,
+für verschiedene Linux-Distributionen siehe die Tabelle in
+[`docs/operations.md`](docs/operations.md#systemabhängigkeiten).
 
 ## Tests & Lint
 
