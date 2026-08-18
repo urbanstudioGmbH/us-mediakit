@@ -35,6 +35,18 @@ python3 -m venv /opt/us-mediakit/venv
 | `USMEDIAKIT_C2PA_CERT_FILE` / `USMEDIAKIT_C2PA_KEY_FILE` | optional | PEM-Zertifikatskette/Privatschlüssel für die C2PA-Provenienz-Propagation. Ohne beide bleibt die Propagation ein No-Op (kein Fehler) — siehe `docs/c2pa-concepts.md`. |
 | `USMEDIAKIT_MAX_CONCURRENT_VIDEO_PDF_JOBS` | optional | Tarifunabhängige Zusatzschwelle für gleichzeitige `ffmpeg`/`pdftoppm`-Jobs. Default `4`. |
 
+**Gemeinsame Nutzung von CLI und Server:** Der Default-Wert von `USMEDIAKIT_DB` ist ein
+*relativer* SQLite-Pfad — er zeigt auf `us_mediakit.db` im jeweiligen Arbeitsverzeichnis
+des Prozesses. Laufen Server (`us-mediakit serve`) und CLI (z. B.
+`us-mediakit admin api-key create`) aus unterschiedlichen Verzeichnissen oder mit
+unterschiedlich gesetztem `USMEDIAKIT_DB`, sehen sie zwei getrennte Datenbanken — ein
+per CLI erzeugter API-Key wäre dem Server dann unbekannt. Für lokale Entwicklung/Tests
+entweder beide Prozesse aus demselben Verzeichnis starten, oder `USMEDIAKIT_DB` einmal
+mit einem absoluten Pfad exportieren (`export USMEDIAKIT_DB="sqlite:////absoluter/pfad/us_mediakit.db"`,
+vier Slashes), bevor beide gestartet werden. Im Produktivbetrieb ohnehin MariaDB/
+PostgreSQL setzen — dort stellt sich die Frage nicht, da die URL keinen lokalen
+Dateipfad enthält.
+
 ## Datenbank-Migrationen
 
 ```bash

@@ -55,6 +55,13 @@ alembic upgrade head
 USMEDIAKIT_ADMIN_TOKEN=dev-token us-mediakit serve
 ```
 
+**Für CLI-Befehle wie `us-mediakit admin api-key create` in einem zweiten Terminal:**
+Ohne gesetztes `USMEDIAKIT_DB` ist die Datenbank die relative Datei `us_mediakit.db` im
+jeweiligen Arbeitsverzeichnis — CLI und Server müssen deshalb entweder aus demselben
+Verzeichnis laufen, oder beide dieselbe absolute `USMEDIAKIT_DB`-URL gesetzt haben
+(`export USMEDIAKIT_DB="sqlite:////absoluter/pfad/us_mediakit.db"`, vier Slashes), sonst
+sieht der Server einen dort erzeugten API-Key nicht.
+
 Läuft der Dienst, bringt er eine vollständige, automatisch generierte API-Dokumentation
 gleich mit: interaktives Swagger UI unter `/docs`, ReDoc unter `/redoc`, rohes
 OpenAPI-3.1-Schema unter `/openapi.json`.
