@@ -5,7 +5,26 @@ Ausprobieren (lokal oder auf einem Server mit Docker-Unterstützung, z. B. via
 Plesk-Docker-Extension) — für einen gehärteten Produktivbetrieb weiterhin
 [`operations.md`](operations.md) (systemd + nginx, `DynamicUser`, `ProtectSystem`, ...).
 
-## Lokal bauen und starten
+## Fertiges Image (kein eigener Build nötig)
+
+Bei jedem Push auf `main` und bei jedem Versions-Tag baut
+[`.github/workflows/docker.yml`](../.github/workflows/docker.yml) das Image automatisch
+für `linux/amd64` und `linux/arm64` und veröffentlicht es öffentlich auf GitHub Container
+Registry — kein eigener Docker-Hub-Account nötig:
+
+```bash
+docker pull ghcr.io/urbanstudiogmbh/us-mediakit:latest
+```
+
+Versionierte Tags (`:1.0.0`, `:1.0`, `:1`) entstehen bei jedem `v*`-Git-Tag, `:latest`
+folgt immer dem aktuellen `main`-Stand. Direkt startbar:
+
+```bash
+docker run -p 8000:8000 -e USMEDIAKIT_ADMIN_TOKEN=dev-token \
+  -v us-mediakit-data:/data ghcr.io/urbanstudiogmbh/us-mediakit:latest
+```
+
+## Lokal selbst bauen und starten
 
 ```bash
 docker compose up -d --build
@@ -53,19 +72,17 @@ auf ein gemountetes Secret zeigen lassen.
 Plesk selbst bringt (ab Obsidian, über die "Docker"-Extension) Unterstützung für
 Container mit. Zwei praktikable Wege:
 
-1. **Per SSH direkt auf dem Server** (falls Zugriff besteht): Repo klonen,
-   `docker compose up -d --build` wie oben — unabhängig von Plesk selbst, Plesk sieht den
-   laufenden Container nur als weiteren Prozess auf dem Server. Eigenen Port (oder einen
-   Reverse-Proxy-Vhost in Plesk auf `127.0.0.1:8000`) einrichten, falls der Port nicht
-   direkt von außen erreichbar sein soll.
-2. **Über die Plesk-Docker-Extension selbst**: Image bauen und in eine Registry pushen,
-   die Plesk erreichen kann (Docker Hub oder eine private Registry — Plesks Docker-
-   Extension zieht Images primär von dort, baut in der Regel nicht selbst aus einem
-   `Dockerfile` im Repo). In der Extension: Image angeben, Port 8000 auf einen freien
-   Host-Port mappen, Umgebungsvariablen (`USMEDIAKIT_ADMIN_TOKEN`, `USMEDIAKIT_DB`, ...)
-   eintragen, `/data` als persistentes Volume anlegen. Für HTTPS von außen anschließend
-   in Plesk einen Reverse-Proxy-Vhost auf den gemappten Host-Port legen (Plesk kümmert
-   sich dann um das Let's-Encrypt-Zertifikat).
+1. **Über die Plesk-Docker-Extension** (der direktere Weg dank des fertigen Images):
+   In der Extension `ghcr.io/urbanstudiogmbh/us-mediakit:latest` als Image angeben (kein
+   eigener Build nötig, öffentlich abrufbar, kein Registry-Login erforderlich), Port 8000
+   auf einen freien Host-Port mappen, Umgebungsvariablen (`USMEDIAKIT_ADMIN_TOKEN`,
+   `USMEDIAKIT_DB`, ...) eintragen, `/data` als persistentes Volume anlegen. Für HTTPS von
+   außen anschließend in Plesk einen Reverse-Proxy-Vhost auf den gemappten Host-Port
+   legen (Plesk kümmert sich dann um das Let's-Encrypt-Zertifikat).
+2. **Per SSH direkt auf dem Server** (falls Zugriff besteht): entweder
+   `docker run ...`/`docker compose up -d` mit dem fertigen Image wie oben, oder Repo
+   klonen und `docker compose up -d --build` selbst bauen — unabhängig von Plesk selbst,
+   Plesk sieht den laufenden Container nur als weiteren Prozess auf dem Server.
 
 **Healthcheck:** `docker-compose.yml` prüft `GET /health` alle 30s — in Plesk taucht der
 Container-Status entsprechend als "healthy"/"unhealthy" auf, sobald die Extension
