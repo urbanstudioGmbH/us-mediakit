@@ -113,3 +113,87 @@ def test_watermark_invisible_without_format_flag_defaults_to_jpeg(tmp_path):
 
     with Image.open(source) as img:
         assert img.format == "JPEG"
+
+
+def _quadrant_image(path, w=800, h=400):
+    from PIL import ImageDraw
+
+    img = Image.new("RGB", (w, h))
+    draw = ImageDraw.Draw(img)
+    hw, hh = w // 2, h // 2
+    draw.rectangle([0, 0, hw, hh], fill=(200, 80, 70))
+    draw.rectangle([hw, 0, w, hh], fill=(70, 130, 160))
+    draw.rectangle([0, hh, hw, h], fill=(210, 170, 60))
+    draw.rectangle([hw, hh, w, h], fill=(90, 150, 100))
+    img.save(path, format="PNG")
+
+
+def test_thumbnail_width_height_without_mode_builds_ad_hoc_preset(tmp_path):
+    source = tmp_path / "photo.png"
+    _quadrant_image(source)
+    out = tmp_path / "out.png"
+
+    result = _run_cli(
+        "thumbnail", str(source), "--width", "200", "--height", "100", "--format", "png", "-o", str(out),
+    )
+    assert result.returncode == 0, result.stderr
+    with Image.open(out) as img:
+        assert img.size == (200, 100)
+
+
+def test_thumbnail_without_mode_or_width_height_fails_clearly(tmp_path):
+    source = tmp_path / "photo.png"
+    _quadrant_image(source)
+
+    result = _run_cli("thumbnail", str(source))
+    assert result.returncode == 1
+    assert b"--mode" in result.stderr and b"--width" in result.stderr
+
+
+def test_thumbnail_align_x_align_y_change_which_region_is_kept(tmp_path):
+    """800x400-Quadrantenbild auf ein schmales 100x100-Zielformat zugeschnitten --
+    align-x/align-y muss steuern, welche Ecke im Ergebnis landet."""
+    source = tmp_path / "photo.png"
+    _quadrant_image(source)
+
+    top_left = tmp_path / "top_left.png"
+    bottom_right = tmp_path / "bottom_right.png"
+
+    r1 = _run_cli(
+        "thumbnail", str(source), "--width", "100", "--height", "100", "--fit", "full",
+        "--align-x", "left", "--align-y", "top", "--format", "png", "-o", str(top_left),
+    )
+    assert r1.returncode == 0, r1.stderr
+
+    r2 = _run_cli(
+        "thumbnail", str(source), "--width", "100", "--height", "100", "--fit", "full",
+        "--align-x", "right", "--align-y", "bottom", "--format", "png", "-o", str(bottom_right),
+    )
+    assert r2.returncode == 0, r2.stderr
+
+    with Image.open(top_left) as a, Image.open(bottom_right) as b:
+        # oben-links muss die rote Ecke treffen, unten-rechts die gruene
+        assert a.getpixel((5, 5))[:3] == (200, 80, 70)
+        assert b.getpixel((94, 94))[:3] == (90, 150, 100)
+
+
+def test_thumbnail_max_upscale_factor_allows_capped_simple_upscale(tmp_path):
+    source = tmp_path / "photo.png"
+    _quadrant_image(source, w=100, h=100)
+    without_cap = tmp_path / "without_cap.png"
+    with_cap = tmp_path / "with_cap.png"
+
+    r1 = _run_cli(
+        "thumbnail", str(source), "--width", "500", "--height", "500", "--format", "png", "-o", str(without_cap),
+    )
+    assert r1.returncode == 0, r1.stderr
+    with Image.open(without_cap) as img:
+        assert img.size != (500, 500)  # bisheriges Verhalten unveraendert: keine Vergroesserung
+
+    r2 = _run_cli(
+        "thumbnail", str(source), "--width", "500", "--height", "500",
+        "--max-upscale-factor", "2.0", "--format", "png", "-o", str(with_cap),
+    )
+    assert r2.returncode == 0, r2.stderr
+    with Image.open(with_cap) as img:
+        assert img.size == (200, 200)  # gedeckelt bei Faktor 2, nicht die vollen 500x500

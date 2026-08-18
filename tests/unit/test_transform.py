@@ -130,6 +130,37 @@ def test_apply_fit_does_not_upscale_without_ai_provider():
     assert result.ai_pending is False
 
 
+def test_apply_fit_upscales_within_max_upscale_factor():
+    """Opt-in: max_upscale_factor erlaubt einfache (Lanczos-)Vergrößerung ohne
+    KI-Provider, aber nur explizit angefordert -- Default bleibt unverändert
+    (siehe test_apply_fit_does_not_upscale_without_ai_provider)."""
+    img = _make_image(100, 100)
+    mode = {"w": 150, "h": 150, "fit": "full"}  # scale = 1.5, innerhalb des Faktors
+    result = transform.apply_fit(img, mode, max_upscale_factor=2.0)
+    assert result.image.size == (150, 150)
+    assert (result.target_width, result.target_height) == (150, 150)
+
+
+def test_apply_fit_caps_upscale_at_max_upscale_factor():
+    """Reicht der erlaubte Faktor nicht für die volle Zielgröße, bleibt das Ergebnis an
+    der Obergrenze stehen -- kleiner als angefragt, aber größer als das Original."""
+    img = _make_image(100, 100)
+    mode = {"w": 500, "h": 500, "fit": "full"}  # scale = 5.0, Cap bei 2.0
+    result = transform.apply_fit(img, mode, max_upscale_factor=2.0)
+    assert result.image.size == (200, 200)
+    assert (result.target_width, result.target_height) == (500, 500)  # weiterhin die echte Anfrage
+
+
+def test_apply_fit_max_upscale_factor_ignored_when_ai_provider_given():
+    """ai-Provider hat Vorrang -- max_upscale_factor darf das nicht unterlaufen und
+    selbst schon eine (schlechtere) einfache Vergrößerung vornehmen."""
+    img = _make_image(100, 100)
+    mode = {"w": 500, "h": 500, "fit": "full"}
+    result = transform.apply_fit(img, mode, ai="real-esrgan", max_upscale_factor=2.0)
+    assert result.ai_pending is True
+    assert result.image.size == (100, 100)
+
+
 def test_apply_fit_marks_ai_pending_when_ai_requested_and_upscaling():
     img = _make_image(100, 100)
     mode = {"w": 500, "h": 500, "fit": "full"}

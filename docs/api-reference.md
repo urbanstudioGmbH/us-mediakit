@@ -10,11 +10,27 @@ Server nutzbar (Library/CLI).
 
 ## Zuschnitt (`thumbnail`)
 
-Siehe [`fit-modes.md`](fit-modes.md) für die vier Fit-Modi mit Beispielbildern.
+Siehe [`fit-modes.md`](fit-modes.md) für die vier Fit-Modi, Ausrichtung (`alignx`/`aligny`),
+das Opt-in `max_upscale_factor` und Beispielbilder.
 
 ```bash
 us-mediakit thumbnail photo.jpg --mode showcase_medium -o thumb.jpg
 ```
+
+**`--mode` ist optional** — Alternative: `--width`/`--height` (mit optional `--fit`, Default
+`full`) direkt angeben, ohne vorher einen Preset in `imageformats.json` anzulegen:
+
+```bash
+us-mediakit thumbnail photo.jpg --width 400 --height 300 --fit crop -o thumb.jpg
+```
+
+Weitere Parameter, jeweils als CLI-Flag und als gleichnamiges API-Feld verfügbar:
+
+| Parameter | Zweck |
+|---|---|
+| `--align-x`/`alignx`, `--align-y`/`aligny` | Ausrichtung des Ausschnitts bei `greedyscalecrop`/`full` — `left`/`center`/`right` bzw. `top`/`center`/`bottom`, oder ein numerischer Prozentwert 0–100 für Fein-Positionierung (siehe `fit-modes.md`). |
+| `--max-upscale-factor`/`max_upscale_factor` | Opt-in für einfache (bikubische) Vergrößerung ohne KI-Provider, bis zu diesem Faktor. Ohne Angabe weiterhin keine Vergrößerung (bisheriges Verhalten). |
+| `--video-seek-seconds`/`video_seek_seconds` | Nur mit `--video`/`is_video`: Zeitpunkt der Frame-Extraktion in Sekunden (Default siehe `media.video.DEFAULT_SEEK_SECONDS`), automatisch auf die Videodauer geklemmt. |
 
 Library-Ebene: `us_mediakit.core.pipeline.generate_thumbnail(ThumbnailRequest(...))`.
 
@@ -285,6 +301,16 @@ curl -X POST http://localhost:8000/v1/watermark -H "Authorization: Bearer $KEY" 
 erzeugt und in der Antwort zurückgegeben. **Die Zuordnung "Referenz-ID → welches
 Asset/Konto" führt der Aufrufer selbst** — us-mediakit legt dafür keine eigene Tabelle
 an (wie bei der Account-Default-Provider-Auflösung).
+
+Über die CLI steuert `--format` das tatsächliche Ausgabeformat (Default `JPEG`,
+unabhängig von der Dateiendung des Quellpfads):
+
+```bash
+us-mediakit watermark invisible photo.png --reference-id 01020304 --format PNG
+```
+
+Ohne `--format` kodiert `watermark invisible` intern immer JPEG (Qualität 92) — bei
+Robustheitstests gegen mehrfache Nachkompression relevant, siehe Hinweis unten.
 
 Bilder müssen größer als 256×256 Pixel sein, sonst `422`. Technik: DWT-DCT-SVD (dieselbe
 Grundtechnik, mit der Stable Diffusion seine generierten Bilder standardmäßig

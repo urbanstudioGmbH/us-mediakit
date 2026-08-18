@@ -40,6 +40,7 @@ class ThumbnailRequest:
     aligny: str | float | None = None
     zoom: str | float | None = None
     ai: str | None = None
+    max_upscale_factor: float | None = None
     is_video: bool = False
     is_pdf: bool = False
     pdf_page: int = 1
@@ -123,6 +124,7 @@ def generate_thumbnail(
             aligny=request.aligny,
             zoom=request.zoom,
             ai=request.ai,
+            max_upscale_factor=request.max_upscale_factor,
         )
 
     output_format_key = request.output_format.lower()

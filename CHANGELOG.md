@@ -8,6 +8,20 @@ Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.0.0/), Ve
 
 - Docker-Support: `Dockerfile`/`docker-compose.yml`, automatisch gebautes und auf
   GitHub Container Registry veröffentlichtes Image (`ghcr.io/urbanstudiogmbh/us-mediakit`).
+- `thumbnail`: `--mode`/`mode` ist jetzt optional — Alternative `--width`/`--height`
+  (`width`/`height`) mit optionalem `--fit`/`fit` (Default `full`), ohne dafür vorher
+  einen benannten Eintrag in `imageformats.json` anzulegen.
+- `thumbnail`: `--align-x`/`--align-y` (`alignx`/`aligny`) jetzt auch über CLI und
+  Netzwerk-Dienst steuerbar, nicht mehr nur als fest im Preset hinterlegter Wert —
+  akzeptieren wie im PHP-Original sowohl Schlüsselwörter (`left`/`center`/`right`,
+  `top`/`center`/`bottom`) als auch numerische Prozentwerte 0–100.
+- `thumbnail`: `--max-upscale-factor`/`max_upscale_factor` als explizites Opt-in für
+  einfache (bikubische) Vergrößerung ohne KI-Provider, bis zu einem angegebenen Faktor.
+  Ohne Angabe unverändertes bisheriges Verhalten (keine Vergrößerung).
+- `thumbnail --video`: `--video-seek-seconds`/`video_seek_seconds` jetzt über CLI und
+  Netzwerk-Dienst einstellbar, vorher nur auf Bibliotheks-Ebene möglich.
+- `watermark invisible`: `--format` steuert jetzt das tatsächliche Ausgabeformat
+  (vorher immer intern JPEG, unabhängig von der Dateiendung des Quellpfads).
 
 ### Geändert
 

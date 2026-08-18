@@ -29,9 +29,17 @@ def post_thumbnail(
     api_key: ApiKey = Depends(require_api_key),
     session: Session = Depends(get_session),
 ) -> ThumbnailApiResponse:
-    presets = config.load_imageformats()
-    if body.mode not in presets:
-        raise HTTPException(status_code=422, detail=f"Unbekanntes Preset {body.mode!r}")
+    if body.mode is not None:
+        presets = config.load_imageformats()
+        if body.mode not in presets:
+            raise HTTPException(status_code=422, detail=f"Unbekanntes Preset {body.mode!r}")
+        thumbnail_mode = presets[body.mode]
+    elif body.width and body.height:
+        # Presets sind optional: ohne mode reichen Zielmaße direkt aus, ohne dafür vorher
+        # einen benannten Eintrag in imageformats.json anlegen zu müssen.
+        thumbnail_mode = {"w": body.width, "h": body.height, "fit": body.fit}
+    else:
+        raise HTTPException(status_code=422, detail="Entweder mode oder width zusammen mit height angeben.")
 
     source_bytes = base64.b64decode(body.source)
     ctx = MeteringContext(
@@ -41,11 +49,14 @@ def post_thumbnail(
     def work() -> tuple[bytes, dict]:
         request = ThumbnailRequest(
             source=source_bytes,
-            mode=presets[body.mode],
+            mode=thumbnail_mode,
             output_format=body.output_format,
             crop=body.crop,
             aspect_ratio=body.aspect_ratio,
+            alignx=body.alignx,
+            aligny=body.aligny,
             zoom=body.zoom,
+            max_upscale_factor=body.max_upscale_factor,
             is_video=body.is_video,
             video_seek_seconds=(
                 body.video_seek_seconds if body.video_seek_seconds is not None else DEFAULT_SEEK_SECONDS

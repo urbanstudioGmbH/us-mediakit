@@ -42,11 +42,25 @@ das Preset von sich aus so konfiguriert ist.
 ![full](images/full.png)
 
 **Wichtige Einschränkung:** Ist die Zielgröße größer als die Quelle (`scale > 1`) und ist
-**kein** `ai`-Provider angegeben, wird **nicht** vergrößert — das Ergebnis bleibt kleiner
-als angefragt. Grund: Eine reine bikubische Vergrößerung ist nicht das gewünschte
-Standardverhalten, sondern nur mit einem konfigurierten KI-Upscaling-Provider sinnvoll
-(siehe [`providers.md`](providers.md)). Die CLI weist beim Auftreten dieses Falls
-ausdrücklich darauf hin.
+**kein** `ai`-Provider angegeben, wird standardmäßig **nicht** vergrößert — das Ergebnis
+bleibt kleiner als angefragt. Grund: Eine reine bikubische Vergrößerung ist nicht das
+gewünschte Standardverhalten, sondern nur mit einem konfigurierten KI-Upscaling-Provider
+wirklich scharf (siehe [`providers.md`](providers.md)). Die CLI weist beim Auftreten
+dieses Falls ausdrücklich darauf hin.
+
+**Opt-in: einfache Vergrößerung per `max_upscale_factor`.** Wer eine leicht weiche
+bikubische Vergrößerung bewusst in Kauf nimmt (z. B. bis zur doppelten Größe), kann das
+explizit erlauben — ohne Angabe bleibt es beim bisherigen Verhalten (keine Vergrößerung):
+
+```bash
+us-mediakit thumbnail photo.jpg --mode showcase_medium --max-upscale-factor 2.0 -o thumb.jpg
+```
+
+Reicht der erlaubte Faktor nicht für die volle Zielgröße (Quelle ist mehr als
+`max_upscale_factor`-mal zu klein), wird bis zur Obergrenze vergrößert und dort
+gestoppt — das Ergebnis bleibt dann weiterhin kleiner als die eigentliche Zielgröße,
+aber größer als das Original. Ein gesetzter `ai`-Provider hat immer Vorrang vor
+`max_upscale_factor`.
 
 ### Ausrichtung (`xalign`/`yalign`)
 
@@ -57,6 +71,31 @@ Ziel unterschiedliche Seitenverhältnisse haben. Beispiel mit `{"w": 200, "h": 2
 | `xalign: left, yalign: top` | `xalign: right, yalign: bottom` |
 |---|---|
 | ![links oben](images/full-align-left-top.png) | ![rechts unten](images/full-align-right-bottom.png) |
+
+Wie im PHP-Original (`SimpleImageLibrary3`) sind beide Schreibweisen gleichwertig nutzbar:
+die Schlüsselwörter für die vier Standardfälle, oder ein numerischer Prozentwert (0–100)
+für eine Positionierung, die die Schlüsselwörter allein nicht ausdrücken können (z. B.
+`alignx: 75` — knapp rechts der Mitte, nicht ganz am rechten Rand). Über CLI und
+Netzwerk-Dienst nicht mehr nur als fest im Preset hinterlegter Wert, sondern auch direkt
+pro Aufruf überschreibbar (überschreibt den Preset-Wert nur für diesen einen Aufruf):
+
+```bash
+us-mediakit thumbnail photo.jpg --width 300 --height 300 --align-x 75 --align-y top -o thumb.jpg
+```
+
+### Presets sind optional (`--width`/`--height` statt `--mode`)
+
+`--mode` (bzw. `mode` im Request-Body) verweist auf einen benannten Eintrag in
+`imageformats.json` — praktisch für wiederkehrende Formate, aber nicht zwingend. Für einen
+einmaligen Zuschnitt reichen `--width`/`--height` (bzw. `width`/`height`) direkt, ohne
+vorher einen Preset anzulegen. `--fit`/`fit` ist dabei optional (Default `full`):
+
+```bash
+us-mediakit thumbnail photo.jpg --width 400 --height 300 --fit crop -o thumb.jpg
+```
+
+Genau eines von beidem ist Pflicht — `--mode` oder `--width` zusammen mit `--height` —,
+sonst liefert die CLI einen Fehler (Exit-Code 1) bzw. die API `422`.
 
 ### Zoom
 

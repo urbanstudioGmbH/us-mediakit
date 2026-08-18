@@ -92,6 +92,147 @@ def test_thumbnail_unknown_output_format_returns_422(client, raw_api_key):
     assert response.status_code == 422
 
 
+def _quadrant_png_b64(w: int = 800, h: int = 400) -> str:
+    from PIL import ImageDraw
+
+    img = Image.new("RGB", (w, h))
+    draw = ImageDraw.Draw(img)
+    hw, hh = w // 2, h // 2
+    draw.rectangle([0, 0, hw, hh], fill=(200, 80, 70))
+    draw.rectangle([hw, 0, w, hh], fill=(70, 130, 160))
+    draw.rectangle([0, hh, hw, h], fill=(210, 170, 60))
+    draw.rectangle([hw, hh, w, h], fill=(90, 150, 100))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")  # verlustfrei -- exakte Pixelvergleiche in den align-Tests unten
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def test_thumbnail_width_height_without_mode_builds_ad_hoc_preset(client, raw_api_key):
+    response = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-thumb-adhoc-1",
+            "source": _quadrant_png_b64(),
+            "width": 200,
+            "height": 100,
+            "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert (body["target_width"], body["target_height"]) == (200, 100)
+    with Image.open(io.BytesIO(base64.b64decode(body["data"]))) as img:
+        assert img.size == (200, 100)
+
+
+def test_thumbnail_without_mode_or_width_height_returns_422(client, raw_api_key):
+    response = client.post(
+        "/v1/thumbnail",
+        json={"request_id": "r-thumb-adhoc-2", "source": _jpeg_b64()},
+        headers=_auth(raw_api_key),
+    )
+    assert response.status_code == 422
+
+
+def test_thumbnail_alignx_aligny_change_which_region_is_kept(client, raw_api_key):
+    source = _quadrant_png_b64()
+
+    top_left = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-align-1", "source": source, "width": 100, "height": 100,
+            "fit": "full", "alignx": "left", "aligny": "top", "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    bottom_right = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-align-2", "source": source, "width": 100, "height": 100,
+            "fit": "full", "alignx": "right", "aligny": "bottom", "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert top_left.status_code == 200 and bottom_right.status_code == 200
+
+    with Image.open(io.BytesIO(base64.b64decode(top_left.json()["data"]))) as a:
+        assert a.getpixel((5, 5))[:3] == (200, 80, 70)
+    with Image.open(io.BytesIO(base64.b64decode(bottom_right.json()["data"]))) as b:
+        assert b.getpixel((94, 94))[:3] == (90, 150, 100)
+
+
+def test_thumbnail_alignx_aligny_accept_numeric_values_like_php_original(client, raw_api_key):
+    """Wie im PHP-Original (SimpleImageLibrary3): alignx/aligny akzeptieren sowohl die
+    Schluesselwoerter (left/right/top/bottom) als auch numerische Prozentwerte 0-100 --
+    numerisch 0/100 muss sich identisch zu left/right bzw. top/bottom verhalten, und
+    Zwischenwerte erlauben eine Positionierung, die die Schluesselwoerter allein nicht
+    koennen."""
+    source = _quadrant_png_b64()
+
+    numeric_top_left = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-align-numeric-1", "source": source, "width": 100, "height": 100,
+            "fit": "full", "alignx": 0, "aligny": 0, "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    numeric_bottom_right = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-align-numeric-2", "source": source, "width": 100, "height": 100,
+            "fit": "full", "alignx": 100, "aligny": 100, "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert numeric_top_left.status_code == 200 and numeric_bottom_right.status_code == 200
+
+    with Image.open(io.BytesIO(base64.b64decode(numeric_top_left.json()["data"]))) as a:
+        assert a.getpixel((5, 5))[:3] == (200, 80, 70)
+    with Image.open(io.BytesIO(base64.b64decode(numeric_bottom_right.json()["data"]))) as b:
+        assert b.getpixel((94, 94))[:3] == (90, 150, 100)
+
+    # Fein-Positionierung, die "left"/"right" allein nicht ausdruecken koennen: knapp
+    # rechts der Bildmitte (deutlich in den blauen/gruenen Quadranten hinein, nicht mehr
+    # im roten/gelben Bereich links der Mitte).
+    off_center = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-align-numeric-3", "source": source, "width": 100, "height": 400,
+            "fit": "full", "alignx": 75, "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert off_center.status_code == 200
+    with Image.open(io.BytesIO(base64.b64decode(off_center.json()["data"]))) as img:
+        assert img.getpixel((50, 5))[:3] == (70, 130, 160)
+
+
+def test_thumbnail_max_upscale_factor_caps_simple_upscale(client, raw_api_key):
+    source = _quadrant_png_b64(w=100, h=100)
+
+    without_cap = client.post(
+        "/v1/thumbnail",
+        json={"request_id": "r-upscale-1", "source": source, "width": 500, "height": 500, "output_format": "png"},
+        headers=_auth(raw_api_key),
+    )
+    with_cap = client.post(
+        "/v1/thumbnail",
+        json={
+            "request_id": "r-upscale-2", "source": source, "width": 500, "height": 500,
+            "max_upscale_factor": 2.0, "output_format": "png",
+        },
+        headers=_auth(raw_api_key),
+    )
+    assert without_cap.status_code == 200 and with_cap.status_code == 200
+
+    with Image.open(io.BytesIO(base64.b64decode(without_cap.json()["data"]))) as img:
+        assert img.size != (500, 500)
+    with Image.open(io.BytesIO(base64.b64decode(with_cap.json()["data"]))) as img:
+        assert img.size == (200, 200)
+
+
 def test_thumbnail_dry_run_costs_nothing_and_does_not_process(client, raw_api_key):
     response = client.post(
         "/v1/thumbnail",

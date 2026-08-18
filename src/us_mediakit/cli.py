@@ -33,9 +33,18 @@ def _describe_actual_size(result: ThumbnailResult) -> tuple[int, int] | None:
 
 
 def _cmd_thumbnail(args: argparse.Namespace) -> int:
-    presets = config.load_imageformats()
-    if args.mode not in presets:
-        print(f"Unbekanntes Preset {args.mode!r}. Verfügbar: {', '.join(sorted(presets))}", file=sys.stderr)
+    if args.mode:
+        presets = config.load_imageformats()
+        if args.mode not in presets:
+            print(f"Unbekanntes Preset {args.mode!r}. Verfügbar: {', '.join(sorted(presets))}", file=sys.stderr)
+            return 1
+        thumbnail_mode = presets[args.mode]
+    elif args.width and args.height:
+        # Presets sind optional: ohne --mode reichen Zielmaße direkt aus, ohne dafür
+        # vorher einen benannten Eintrag in imageformats.json anlegen zu müssen.
+        thumbnail_mode = {"w": args.width, "h": args.height, "fit": args.fit}
+    else:
+        print("Entweder --mode oder --width zusammen mit --height angeben.", file=sys.stderr)
         return 1
 
     source_path = Path(args.source)
@@ -54,11 +63,14 @@ def _cmd_thumbnail(args: argparse.Namespace) -> int:
 
     request = ThumbnailRequest(
         source=source_bytes,
-        mode=presets[args.mode],
+        mode=thumbnail_mode,
         output_format=args.format,
         crop=args.crop,
         aspect_ratio=args.aspect_ratio,
+        alignx=args.align_x,
+        aligny=args.align_y,
         zoom=args.zoom,
+        max_upscale_factor=args.max_upscale_factor,
         is_video=args.video,
         video_seek_seconds=args.video_seek_seconds,
         is_pdf=args.pdf,
@@ -348,11 +360,40 @@ def build_parser() -> argparse.ArgumentParser:
 
     thumbnail = subparsers.add_parser("thumbnail", help="Zuschnitt/Resize gemäß Preset")
     thumbnail.add_argument("source")
-    thumbnail.add_argument("--mode", required=True, help="Preset-Name aus imageformats.json")
+    thumbnail.add_argument("--mode", help="Preset-Name aus imageformats.json (optional -- Alternative: --width/--height)")
+    thumbnail.add_argument("--width", type=int, help="Zielbreite, als Alternative zu --mode (mit --height zusammen angeben)")
+    thumbnail.add_argument("--height", type=int, help="Zielhöhe, als Alternative zu --mode (mit --width zusammen angeben)")
+    thumbnail.add_argument(
+        "--fit", default="full", choices=["crop", "greedycrop", "greedyscalecrop", "full"],
+        help="Fit-Modus, nur relevant zusammen mit --width/--height (Default full).",
+    )
     thumbnail.add_argument("--crop", choices=["crop", "greedycrop", "greedyscalecrop"])
     thumbnail.add_argument("--format", default="jpg")
     thumbnail.add_argument("--aspect-ratio", dest="aspect_ratio")
+    thumbnail.add_argument(
+        "--align-x",
+        dest="align_x",
+        default=None,
+        help="Horizontale Ausrichtung des Ausschnitts bei greedyscalecrop/full: 'left'/'center'/'right' "
+        "oder ein Prozentwert 0-100. Ohne Angabe gilt die Ausrichtung aus dem Preset (Default center).",
+    )
+    thumbnail.add_argument(
+        "--align-y",
+        dest="align_y",
+        default=None,
+        help="Vertikale Ausrichtung des Ausschnitts bei greedyscalecrop/full: 'top'/'center'/'bottom' "
+        "oder ein Prozentwert 0-100. Ohne Angabe gilt die Ausrichtung aus dem Preset (Default center).",
+    )
     thumbnail.add_argument("--zoom")
+    thumbnail.add_argument(
+        "--max-upscale-factor",
+        dest="max_upscale_factor",
+        type=float,
+        default=None,
+        help="Explizites Opt-in für einfache (bikubische) Vergrößerung ohne KI-Provider, "
+        "bis zu diesem Faktor (z. B. 2.0 = bis maximal doppelte Größe). Ohne Angabe wird "
+        "weiterhin nicht vergrößert, wie bisher.",
+    )
     thumbnail.add_argument("--video", action="store_true")
     thumbnail.add_argument(
         "--video-seek-seconds",

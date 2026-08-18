@@ -193,11 +193,21 @@ def apply_fit(
     aligny: str | float | None = None,
     zoom: str | float | None = None,
     ai: str | None = None,
+    max_upscale_factor: float | None = None,
 ) -> FitResult:
     """Wendet einen Fit-Modus an. `mode` ist ein Preset aus imageformats.json.
 
     EXIF-Ausrichtung wird vor jeder Berechnung korrigiert (Gegenstück zu
     Imagick::autoOrient() im Original).
+
+    `max_upscale_factor`: explizites Opt-in für einfache (bikubische/Lanczos)
+    Vergrößerung ohne KI-Provider, standardmäßig weiterhin `None` (= keine
+    Vergrößerung, bisheriges Verhalten unverändert). Gesetzt auf z. B. `2.0` wird bis
+    zum Faktor 2 einfach hochskaliert; reicht das nicht für die volle Zielgröße, bleibt
+    das Ergebnis an der Obergrenze stehen (immer noch kleiner als angefragt, aber näher
+    dran als ganz ohne Vergrößerung) — `target_width`/`target_height` melden weiterhin
+    die tatsächlich angefragte Zielgröße, nicht die gedeckelte, damit der bestehende
+    "kleiner als angefragt"-Hinweis (CLI/API) unverändert greift.
     """
     mode = dict(mode)  # Preset nicht mutieren, Request-Overrides gelten nur lokal
     image = ImageOps.exif_transpose(image) or image
@@ -262,10 +272,19 @@ def apply_fit(
         target_height = cropped_height * scale
         ai_pending = bool(ai) and scale > 1
 
-        if not ai and (mode.get("w") or mode.get("h")) and scale <= 1:
-            new_size = (int(php_round(target_width)), int(php_round(target_height)))
+        if scale <= 1:
+            effective_scale: float | None = scale
+        elif not ai and max_upscale_factor is not None:
+            effective_scale = min(scale, max_upscale_factor)
+        else:
+            effective_scale = None  # weder AI noch Opt-in -- Ergebnis bleibt ungeskaliert klein
+
+        if not ai and (mode.get("w") or mode.get("h")) and effective_scale is not None:
+            eff_width = cropped_width * effective_scale
+            eff_height = cropped_height * effective_scale
+            new_size = (int(php_round(eff_width)), int(php_round(eff_height)))
             result_image = cropped.resize(new_size, Image.Resampling.LANCZOS)
-            if scale < 1:
+            if effective_scale < 1:
                 # Näherung an ImageMagicks unsharpMaskImage(0, 0.5, 1, 0) — keine
                 # bitgenaue Übereinstimmung möglich (andere Algorithmus-Parametrisierung),
                 # daher im Golden-Image-Test mit Toleranzband bewerten, nicht 1:1-Diff.

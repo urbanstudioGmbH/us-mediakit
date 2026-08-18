@@ -27,11 +27,28 @@ class C2paOverride(BaseModel):
 
 class ThumbnailApiRequest(OperationRequestBase):
     source: str = Field(description="Bilddaten, Base64-kodiert")
-    mode: str = Field(description="Preset-Name aus imageformats.json")
+    mode: str | None = Field(
+        default=None, description="Preset-Name aus imageformats.json. Optional -- Alternative: width/height."
+    )
+    width: int | None = Field(default=None, description="Zielbreite, als Alternative zu mode (mit height zusammen angeben).")
+    height: int | None = Field(default=None, description="Zielhöhe, als Alternative zu mode (mit width zusammen angeben).")
+    fit: str = Field(default="full", description="Fit-Modus, nur relevant zusammen mit width/height (Default full).")
     output_format: str = "jpg"
     crop: str | None = None
     aspect_ratio: str | None = None
+    alignx: str | float | None = Field(
+        default=None, description="Horizontale Ausrichtung des Ausschnitts bei greedyscalecrop/full: left/center/right oder 0-100."
+    )
+    aligny: str | float | None = Field(
+        default=None, description="Vertikale Ausrichtung des Ausschnitts bei greedyscalecrop/full: top/center/bottom oder 0-100."
+    )
     zoom: str | float | None = None
+    max_upscale_factor: float | None = Field(
+        default=None,
+        description="Explizites Opt-in für einfache (bikubische) Vergrößerung ohne KI-Provider, "
+        "bis zu diesem Faktor (z. B. 2.0 = bis maximal doppelte Größe). Ohne Angabe wird nicht "
+        "vergrößert, wie bisher.",
+    )
     is_video: bool = False
     video_seek_seconds: float | None = Field(
         default=None, description="Zeitpunkt für die Frame-Extraktion bei is_video, in Sekunden. Ohne Angabe gilt der Bibliotheks-Default (siehe media.video.DEFAULT_SEEK_SECONDS)."
